@@ -1,16 +1,14 @@
 # Century Golf Partners — Core Fundamentals Self-Assessment
 
-A three-page static site. Clubs take the CF#1 "Friends Inviting Friends"
+A two-page static site. Clubs take the CF#1 "Friends Inviting Friends"
 self-assessment, see their score immediately, print or save a PDF of their
 results, and submit them to a Firebase back end that only you can read.
 
 ```
 index.html          the assessment (public)
-band.html           The Band — leadership roster
 admin.html          results dashboard (login required)
 firebase-config.js  your Firebase keys — the one file you must edit
 firestore.rules     security rules to paste into the Firebase console
-images/             headshots for The Band
 ```
 
 No build step, no npm, no server. It is plain HTML that runs anywhere.
@@ -94,7 +92,7 @@ That's it. Repeat steps 6–7 for anyone else who should see results.
 
 1. Create a new repository on GitHub — e.g. `core-fundamentals`.
    Public is fine; there are no secrets in these files.
-2. Upload every file and the `images/` folder, keeping the structure intact.
+2. Upload every file, keeping the structure intact.
    (Web UI: **Add file → Upload files**, then drag the whole folder in.)
 3. In the repo, go to **Settings → Pages**.
 4. Under *Source* choose **Deploy from a branch**; branch `main`, folder
@@ -166,10 +164,6 @@ Both exports respect the current filter, so you can export a single club.
 top of the `<script>` block, edit the text or the `yes:` / `no:` values. Nothing
 else needs touching — the page, the print report, and the CSV all read from
 that one array.
-
-**Someone joined The Band.** Drop a square headshot into `images/` and add one
-entry to the `people` list at the top of `band.html`'s script block. Titles
-marked `todo: true` render in brass italic so unconfirmed ones stay visible.
 
 **You want a second Core Fundamental.** Copy `index.html` to `cf2.html`,
 replace the `statements` array and the masthead text, and change
