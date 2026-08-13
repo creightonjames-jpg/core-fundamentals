@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Core Fundamentals Results | Century Golf Partners</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23122019'/><text x='32' y='43' font-family='Georgia,serif' font-size='26' letter-spacing='1' fill='%23b8922f' text-anchor='middle'>CG</text></svg>">
+<style>
+  :root{
+    --ink:#1b241d;
+    --forest:#1f3a2e;
+    --forest-deep:#122019;
+    --brass:#b8922f;
+    --brass-light:#d8b968;
+    --ivory:#f4efe2;
+    --paper:#fbf9f3;
+    --line:#d9d0b8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--forest-deep);
+    font-family:'Iowan Old Style','Palatino Linotype',Palatino, Georgia, serif;
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .topnav{
+    display:flex; justify-content:center; gap:26px; padding:14px 20px;
+    background:#0c1610; border-bottom:1px solid rgba(216,185,104,0.25);
+  }
+  .topnav a{ color:#c9c4b3; text-decoration:none; font-size:12px; letter-spacing:0.18em; text-transform:uppercase; }
+  .topnav a:hover{ color:var(--brass-light); }
+  .topnav a.active{ color:var(--brass-light); border-bottom:1px solid var(--brass); padding-bottom:3px; }
+
+  .head{ text-align:center; padding:34px 20px 26px; color:var(--ivory); border-bottom:1px solid rgba(216,185,104,0.3); }
+  .head .eyebrow{ letter-spacing:0.3em; font-size:11px; text-transform:uppercase; color:var(--brass-light); margin-bottom:8px; }
+  .head h1{ font-size:clamp(22px,3vw,30px); margin:0; font-weight:400; }
+
+  /* ---------- login ---------- */
+  .login-wrap{ max-width:400px; margin:60px auto; padding:0 24px; }
+  .card{
+    background:var(--paper); border:1px solid var(--line); border-radius:3px; padding:30px 28px;
+  }
+  .card h2{ margin:0 0 6px; font-size:19px; color:var(--forest); font-weight:500; }
+  .card .sub{ font-size:13px; color:#6a6552; margin:0 0 20px; line-height:1.5; }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#8a8267; margin-bottom:5px; }
+  .field input{
+    width:100%; font-family:inherit; font-size:15px; padding:10px 12px;
+    background:#fff; border:1px solid var(--line); border-radius:2px; color:var(--ink);
+  }
+  .field input:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+  .btn{
+    font-family:inherit; font-size:13.5px; letter-spacing:0.05em; text-transform:uppercase;
+    padding:11px 22px; border-radius:2px; cursor:pointer; border:1px solid var(--brass); font-weight:700;
+  }
+  .btn-primary{ background:var(--brass); color:var(--forest-deep); }
+  .btn-primary:hover:not(:disabled){ background:var(--brass-light); }
+  .btn-outline{ background:transparent; color:var(--forest); border-color:var(--forest); }
+  .btn-outline:hover{ background:rgba(31,58,46,0.08); }
+  .btn-sm{ font-size:11.5px; padding:7px 14px; }
+  .btn:disabled{ opacity:0.45; cursor:not-allowed; }
+  .btn-full{ width:100%; }
+  .msg{ font-size:13px; margin-top:12px; line-height:1.5; }
+  .msg.err{ color:#9c3a2c; }
+  .msg.ok{ color:#3c6b45; }
+
+  /* ---------- dashboard ---------- */
+  .dash{ display:none; max-width:1180px; margin:0 auto; padding:26px 24px 60px; }
+  .dash.show{ display:block; }
+
+  .toolbar{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  .toolbar .who{ color:#c9c4b3; font-size:12.5px; margin-right:auto; }
+  .toolbar .who b{ color:var(--brass-light); }
+  .search{
+    font-family:inherit; font-size:14px; padding:9px 12px; min-width:220px;
+    background:var(--paper); border:1px solid var(--line); border-radius:2px; color:var(--ink);
+  }
+
+  .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .stat{
+    background:rgba(251,249,243,0.06); border:1px solid rgba(216,185,104,0.3);
+    border-radius:3px; padding:14px 16px; color:var(--ivory);
+  }
+  .stat .k{ font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:#a9a494; }
+  .stat .v{ font-size:24px; color:var(--brass-light); margin-top:5px; font-weight:600; }
+
+  table.grid{
+    width:100%; border-collapse:collapse; background:var(--paper);
+    border:1px solid var(--line); border-radius:3px; overflow:hidden;
+  }
+  table.grid th{
+    text-align:left; font-size:10.5px; letter-spacing:0.13em; text-transform:uppercase;
+    color:#fff; background:var(--forest); padding:11px 14px; cursor:pointer; user-select:none;
+    white-space:nowrap;
+  }
+  table.grid th:hover{ background:#27493a; }
+  table.grid th .arrow{ color:var(--brass-light); font-size:9px; margin-left:4px; }
+  table.grid td{ padding:11px 14px; border-top:1px solid #eae4d2; font-size:14px; }
+  table.grid tbody tr{ cursor:pointer; }
+  table.grid tbody tr:hover{ background:#f2eede; }
+  .lvl-pill{
+    display:inline-block; padding:2px 9px; border-radius:10px; font-size:12px; font-weight:600;
+    border:1px solid var(--forest); color:var(--forest);
+  }
+  .lvl-401{ background:var(--forest); color:#fff; }
+  .lvl-301{ background:rgba(31,58,46,0.18); }
+  .lvl-201{ background:rgba(184,146,47,0.18); border-color:var(--brass); color:#7d6320; }
+  .lvl-101{ background:transparent; border-color:#a89e82; color:#7a7360; }
+  .empty{ text-align:center; padding:44px 20px; color:#8a8267; font-size:14px; }
+
+  /* ---------- detail drawer ---------- */
+  .overlay{
+    display:none; position:fixed; inset:0; background:rgba(8,14,10,0.7); z-index:40;
+  }
+  .overlay.show{ display:block; }
+  .drawer{
+    position:fixed; top:0; right:0; height:100%; width:min(720px,100%);
+    background:var(--paper); z-index:50; overflow-y:auto;
+    transform:translateX(100%); transition:transform 0.22s ease;
+    border-left:3px solid var(--brass);
+  }
+  .drawer.show{ transform:translateX(0); }
+  .drawer-head{
+    position:sticky; top:0; background:var(--forest); color:var(--ivory);
+    padding:18px 24px; display:flex; align-items:center; gap:14px;
+  }
+  .drawer-head h3{ margin:0; font-size:18px; font-weight:500; flex:1 1 auto; }
+  .drawer-head .x{
+    background:none; border:1px solid rgba(244,239,226,0.4); color:var(--ivory);
+    font-size:16px; width:30px; height:30px; border-radius:2px; cursor:pointer; line-height:1;
+  }
+  .drawer-head .x:hover{ background:rgba(244,239,226,0.15); }
+  .drawer-body{ padding:22px 24px 60px; }
+  .d-meta{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px; }
+  .d-meta div span{ display:block; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#8a8267; margin-bottom:3px; }
+  .d-meta div b{ font-size:15px; font-weight:600; color:var(--forest); }
+  .d-score{
+    border:1px solid var(--brass); background:var(--ivory); padding:16px 20px;
+    text-align:center; margin-bottom:20px;
+  }
+  .d-score .lv{ font-size:22px; color:var(--forest); font-weight:600; }
+  .d-score .dt{ font-size:13px; color:#5a5544; margin-top:5px; line-height:1.5; }
+  .d-h4{
+    font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--brass);
+    font-weight:700; border-bottom:1px solid var(--line); padding-bottom:5px; margin:22px 0 10px;
+  }
+  table.d-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.d-table th{
+    text-align:left; font-size:10px; letter-spacing:0.1em; text-transform:uppercase;
+    color:#8a8267; border-bottom:1px solid var(--line); padding:5px 7px; font-weight:600;
+  }
+  table.d-table td{ padding:6px 7px; border-bottom:1px solid #eee8d6; vertical-align:top; line-height:1.45; }
+  table.d-table td.n{ width:26px; color:var(--brass); font-weight:600; }
+  table.d-table td.a{ width:48px; text-align:center; font-weight:600; }
+  table.d-table td.l{ width:46px; text-align:center; color:var(--forest); font-weight:600; }
+  tr.sec-row td{ background:#f0ebda; font-weight:700; font-size:12.5px; color:var(--forest); }
+
+  @media (max-width:820px){
+    .stats{ grid-template-columns:repeat(2,1fr); }
+    table.grid .hide-sm{ display:none; }
+    .d-meta{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- print a single submission ---------- */
+  @media print{
+    @page{ margin:0.6in; }
+    body{ background:#fff; }
+    .topnav, .head, .dash, .overlay{ display:none !important; }
+    .drawer{
+      position:static; transform:none; width:100%; height:auto; border:none;
+      overflow:visible; background:#fff;
+    }
+    .drawer-head{ position:static; background:#fff; color:#000; padding:0 0 10px; border-bottom:2px solid #1f3a2e; }
+    .drawer-head .x, .drawer-head .btn{ display:none !important; }
+    .drawer-body{ padding:16px 0 0; }
+    .d-score{ background:#faf7ee !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    tr.sec-row td{ background:#f2eede !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    tr{ page-break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html">Self-Assessment</a>
+  <a href="band.html">The Band</a>
+  <a href="admin.html" class="active">Admin</a>
+</nav>
+
+<div class="head">
+  <div class="eyebrow">Century Golf Partners · Membership Core Fundamentals</div>
+  <h1>Assessment Results</h1>
+</div>
+
+<!-- ---------------- login ---------------- -->
+<div class="login-wrap" id="login-wrap">
+  <div class="card">
+    <h2>Administrator sign-in</h2>
+    <p class="sub">This dashboard is restricted. Sign in with the Century Golf admin account.</p>
+    <form id="login-form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="login-btn">Sign in</button>
+    </form>
+    <p class="msg" id="login-msg"></p>
+  </div>
+</div>
+
+<!-- ---------------- dashboard ---------------- -->
+<div class="dash" id="dash">
+  <div class="toolbar">
+    <div class="who">Signed in as <b id="who-email">—</b></div>
+    <input type="search" class="search" id="search" placeholder="Filter by club or name…">
+    <button class="btn btn-outline btn-sm" id="csv-summary">Export CSV — summary</button>
+    <button class="btn btn-outline btn-sm" id="csv-answers">Export CSV — every answer</button>
+    <button class="btn btn-outline btn-sm" id="signout">Sign out</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Submissions</div><div class="v" id="s-count">—</div></div>
+    <div class="stat"><div class="k">Clubs reporting</div><div class="v" id="s-clubs">—</div></div>
+    <div class="stat"><div class="k">Average % of range</div><div class="v" id="s-avg">—</div></div>
+    <div class="stat"><div class="k">Most common level</div><div class="v" id="s-mode">—</div></div>
+  </div>
+
+  <table class="grid" id="grid">
+    <thead>
+      <tr>
+        <th data-sort="submittedAt">Date <span class="arrow"></span></th>
+        <th data-sort="club">Club <span class="arrow"></span></th>
+        <th data-sort="takerName">Completed by <span class="arrow"></span></th>
+        <th data-sort="level">Level <span class="arrow"></span></th>
+        <th data-sort="pctOfRange">% of range <span class="arrow"></span></th>
+        <th data-sort="answered" class="hide-sm">Answered <span class="arrow"></span></th>
+      </tr>
+    </thead>
+    <tbody id="grid-body"></tbody>
+  </table>
+  <div class="empty" id="empty" style="display:none;">No submissions yet.</div>
+</div>
+
+<!-- ---------------- detail drawer ---------------- -->
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3 id="d-title">Submission</h3>
+    <button class="btn btn-outline btn-sm" id="d-print" style="border-color:rgba(244,239,226,0.5);color:#f4efe2;">Print</button>
+    <button class="x" id="d-close" aria-label="Close">×</button>
+  </div>
+  <div class="drawer-body" id="drawer-body"></div>
+</div>
+
+<script type="module">
+import { firebaseConfig, SUBMISSIONS_COLLECTION, FIREBASE_ENABLED } from './firebase-config.js';
+
+const levels = ['101','201','301','401'];
+const levelNames = {'101':'Awareness','201':'Implementation','301':'Excellence','401':'Culture'};
+
+let db=null, auth=null, fs=null, rows=[], sortKey='submittedAt', sortDir=-1;
+
+function msg(t, cls){
+  const m = document.getElementById('login-msg');
+  m.textContent = t;
+  m.className = 'msg' + (cls ? ' ' + cls : '');
+}
+function esc(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ------------------------------------------------------------------ boot */
+async function boot(){
+  if(!FIREBASE_ENABLED){
+    msg('Firebase is not connected yet. Paste your config into firebase-config.js and set FIREBASE_ENABLED to true, then reload this page.', 'err');
+    document.getElementById('login-btn').disabled = true;
+    return;
+  }
+  try{
+    const [{ initializeApp }, authMod, fsMod] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app = initializeApp(firebaseConfig);
+    auth = authMod.getAuth(app);
+    fs = fsMod;
+    db = fsMod.getFirestore(app);
+
+    authMod.onAuthStateChanged(auth, function(user){
+      // Anonymous users are assessment takers, not admins — ignore them here.
+      if(user && !user.isAnonymous){
+        document.getElementById('who-email').textContent = user.email || user.uid;
+        document.getElementById('login-wrap').style.display = 'none';
+        document.getElementById('dash').classList.add('show');
+        loadSubmissions();
+      }else{
+        document.getElementById('login-wrap').style.display = '';
+        document.getElementById('dash').classList.remove('show');
+      }
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async function(e){
+      e.preventDefault();
+      const btn = document.getElementById('login-btn');
+      btn.disabled = true;
+      msg('Signing in…', '');
+      try{
+        await authMod.signInWithEmailAndPassword(auth,
+          document.getElementById('email').value.trim(),
+          document.getElementById('password').value);
+        msg('', '');
+      }catch(err){
+        msg(friendlyAuthError(err), 'err');
+      }finally{
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('signout').addEventListener('click', function(){
+      authMod.signOut(auth);
+      rows = [];
+      document.getElementById('password').value = '';
+    });
+
+  }catch(err){
+    console.error(err);
+    msg('Could not load Firebase: ' + (err && err.message ? err.message : err), 'err');
+  }
+}
+boot();
+
+function friendlyAuthError(err){
+  const c = err && err.code ? err.code : '';
+  if(c.indexOf('invalid-credential') > -1 || c.indexOf('wrong-password') > -1 || c.indexOf('user-not-found') > -1)
+    return 'That email and password combination did not work.';
+  if(c.indexOf('too-many-requests') > -1)
+    return 'Too many attempts. Wait a minute and try again.';
+  if(c.indexOf('operation-not-allowed') > -1)
+    return 'Email/password sign-in is not enabled in your Firebase project yet (Authentication → Sign-in method).';
+  if(c.indexOf('network') > -1)
+    return 'Network problem reaching Firebase. Check your connection.';
+  return 'Sign-in failed: ' + (err && err.message ? err.message : 'unknown error');
+}
+
+/* ------------------------------------------------------------------ load */
+async function loadSubmissions(){
+  try{
+    const q = fs.query(fs.collection(db, SUBMISSIONS_COLLECTION), fs.orderBy('submittedAt','desc'));
+    const snap = await fs.getDocs(q);
+    rows = [];
+    snap.forEach(function(doc){
+      const d = doc.data();
+      d.__id = doc.id;
+      d.__date = d.submittedAt && d.submittedAt.toDate ? d.submittedAt.toDate() : null;
+      rows.push(d);
+    });
+    renderStats();
+    renderGrid();
+  }catch(err){
+    console.error(err);
+    document.getElementById('grid').style.display = 'none';
+    const e = document.getElementById('empty');
+    e.style.display = '';
+    e.textContent = (err && err.code === 'permission-denied')
+      ? 'This account is signed in but is not authorised to read submissions. Add its UID to the admins collection in Firestore (see the README), then reload.'
+      : 'Could not load submissions: ' + (err && err.message ? err.message : err);
+  }
+}
+
+function visibleRows(){
+  const term = document.getElementById('search').value.trim().toLowerCase();
+  let out = rows;
+  if(term){
+    out = rows.filter(function(r){
+      return String(r.club||'').toLowerCase().indexOf(term) > -1 ||
+             String(r.takerName||'').toLowerCase().indexOf(term) > -1;
+    });
+  }
+  return out.slice().sort(function(a,b){
+    let av, bv;
+    if(sortKey === 'submittedAt'){
+      av = a.__date ? a.__date.getTime() : 0;
+      bv = b.__date ? b.__date.getTime() : 0;
+    }else if(sortKey === 'pctOfRange' || sortKey === 'answered'){
+      av = Number(a[sortKey]||0); bv = Number(b[sortKey]||0);
+    }else{
+      av = String(a[sortKey]||'').toLowerCase(); bv = String(b[sortKey]||'').toLowerCase();
+    }
+    if(av < bv) return -1*sortDir;
+    if(av > bv) return  1*sortDir;
+    return 0;
+  });
+}
+
+function renderStats(){
+  document.getElementById('s-count').textContent = rows.length;
+  const clubs = new Set(rows.map(function(r){ return (r.club||'').trim().toLowerCase(); }).filter(Boolean));
+  document.getElementById('s-clubs').textContent = clubs.size;
+  if(rows.length){
+    const avg = Math.round(rows.reduce(function(s,r){ return s + Number(r.pctOfRange||0); },0) / rows.length);
+    document.getElementById('s-avg').textContent = avg + '%';
+    const tally = {};
+    rows.forEach(function(r){ tally[r.level] = (tally[r.level]||0) + 1; });
+    let best = '—', bestN = -1;
+    Object.keys(tally).forEach(function(k){ if(tally[k] > bestN){ bestN = tally[k]; best = k; } });
+    document.getElementById('s-mode').textContent = best;
+  }else{
+    document.getElementById('s-avg').textContent = '—';
+    document.getElementById('s-mode').textContent = '—';
+  }
+}
+
+function renderGrid(){
+  const body = document.getElementById('grid-body');
+  const data = visibleRows();
+  body.innerHTML = '';
+  document.getElementById('empty').style.display = data.length ? 'none' : '';
+  document.getElementById('grid').style.display = data.length ? '' : 'none';
+
+  data.forEach(function(r){
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + (r.__date ? r.__date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—') + '</td>' +
+      '<td>' + esc(r.club) + '</td>' +
+      '<td>' + esc(r.takerName) + '</td>' +
+      '<td><span class="lvl-pill lvl-' + esc(r.level) + '">' + esc(r.level) + ' ' + esc(levelNames[r.level]||'') + '</span></td>' +
+      '<td>' + esc(r.pctOfRange) + '%</td>' +
+      '<td class="hide-sm">' + esc(r.answered) + ' / ' + esc(r.totalQuestions||25) + '</td>';
+    tr.addEventListener('click', function(){ openDetail(r); });
+    body.appendChild(tr);
+  });
+
+  document.querySelectorAll('#grid th').forEach(function(th){
+    const a = th.querySelector('.arrow');
+    if(a) a.textContent = (th.dataset.sort === sortKey) ? (sortDir === 1 ? '▲' : '▼') : '';
+  });
+}
+
+document.querySelectorAll('#grid th').forEach(function(th){
+  th.addEventListener('click', function(){
+    const k = th.dataset.sort;
+    if(sortKey === k){ sortDir *= -1; } else { sortKey = k; sortDir = (k === 'submittedAt' ? -1 : 1); }
+    renderGrid();
+  });
+});
+document.getElementById('search').addEventListener('input', renderGrid);
+
+/* ------------------------------------------------------------------ detail */
+function openDetail(r){
+  document.getElementById('d-title').textContent = (r.club || 'Submission') + ' — ' + (r.takerName || '');
+  const b = document.getElementById('drawer-body');
+
+  let h = '<div class="d-meta">' +
+    '<div><span>Club</span><b>' + esc(r.club) + '</b></div>' +
+    '<div><span>Completed by</span><b>' + esc(r.takerName) + '</b></div>' +
+    '<div><span>Submitted</span><b>' + (r.__date ? r.__date.toLocaleString('en-US') : '—') + '</b></div>' +
+    '<div><span>Questions answered</span><b>' + esc(r.answered) + ' of ' + esc(r.totalQuestions||25) + '</b></div>' +
+    '</div>';
+
+  h += '<div class="d-score"><div class="lv">Level ' + esc(r.level) + ' — ' + esc(r.levelName||levelNames[r.level]||'') + '</div>' +
+       '<div class="dt">' + esc(r.pctOfRange) + '% of the range between the worst and best possible outcome · ' +
+       esc(r.earnedPoints) + ' points earned within a possible range of ' + esc(r.minPoints) + '–' + esc(r.maxPoints) + '</div></div>';
+
+  h += '<div class="d-h4">Answer distribution</div><table class="d-table"><tr><th>Level</th><th>Name</th><th>Count</th><th>Share</th></tr>';
+  levels.forEach(function(lv){
+    const c = (r.counts && r.counts[lv]) ? r.counts[lv] : 0;
+    const pct = r.answered ? Math.round((c/r.answered)*100) : 0;
+    h += '<tr><td class="l">' + lv + '</td><td>' + levelNames[lv] + '</td><td>' + c + '</td><td>' + pct + '%</td></tr>';
+  });
+  h += '</table>';
+
+  if(Array.isArray(r.sections) && r.sections.length){
+    h += '<div class="d-h4">Section breakdown</div><table class="d-table"><tr><th>Section</th><th>Answered</th><th>Level</th><th>% of range</th></tr>';
+    r.sections.forEach(function(s){
+      h += '<tr><td>' + esc(s.name) + '</td><td>' + esc(s.answered) + '</td><td class="l">' + esc(s.level) + '</td><td>' + esc(s.pct) + '%</td></tr>';
+    });
+    h += '</table>';
+  }
+
+  if(Array.isArray(r.answers) && r.answers.length){
+    h += '<div class="d-h4">Every answer</div><table class="d-table"><tr><th></th><th>Statement</th><th>Answer</th><th>Level</th></tr>';
+    let sec = null;
+    r.answers.forEach(function(a){
+      if(a.section !== sec){
+        h += '<tr class="sec-row"><td colspan="4">' + esc(a.section) + '</td></tr>';
+        sec = a.section;
+      }
+      h += '<tr><td class="n">' + esc(a.index) + '</td><td>' + esc(a.text) +
+           '</td><td class="a">' + esc(a.choice) + '</td><td class="l">' + esc(a.level) + '</td></tr>';
+    });
+    h += '</table>';
+  }
+
+  b.innerHTML = h;
+  document.getElementById('drawer').classList.add('show');
+  document.getElementById('overlay').classList.add('show');
+}
+
+function closeDetail(){
+  document.getElementById('drawer').classList.remove('show');
+  document.getElementById('overlay').classList.remove('show');
+}
+document.getElementById('d-close').addEventListener('click', closeDetail);
+document.getElementById('overlay').addEventListener('click', closeDetail);
+document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDetail(); });
+document.getElementById('d-print').addEventListener('click', function(){ window.print(); });
+
+/* ------------------------------------------------------------------ CSV */
+function csvCell(v){
+  const s = String(v == null ? '' : v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+function download(name, text){
+  const blob = new Blob(['﻿' + text], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function stamp(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+document.getElementById('csv-summary').addEventListener('click', function(){
+  const data = visibleRows();
+  const head = ['Submitted','Club','Completed by','Level','Level name','% of range',
+                'Points earned','Range min','Range max','Answered','Total questions',
+                'Count 101','Count 201','Count 301','Count 401','Doc ID'];
+  const lines = [head.map(csvCell).join(',')];
+  data.forEach(function(r){
+    lines.push([
+      r.__date ? r.__date.toISOString() : '',
+      r.club, r.takerName, r.level, r.levelName, r.pctOfRange,
+      r.earnedPoints, r.minPoints, r.maxPoints, r.answered, r.totalQuestions||25,
+      r.counts ? r.counts['101'] : '', r.counts ? r.counts['201'] : '',
+      r.counts ? r.counts['301'] : '', r.counts ? r.counts['401'] : '',
+      r.__id
+    ].map(csvCell).join(','));
+  });
+  download('cf1-submissions-summary-' + stamp() + '.csv', lines.join('\n'));
+});
+
+document.getElementById('csv-answers').addEventListener('click', function(){
+  const data = visibleRows();
+  const head = ['Submitted','Club','Completed by','Q #','Section','Statement','Answer','Level','Points','Doc ID'];
+  const lines = [head.map(csvCell).join(',')];
+  data.forEach(function(r){
+    (r.answers||[]).forEach(function(a){
+      lines.push([
+        r.__date ? r.__date.toISOString() : '',
+        r.club, r.takerName, a.index, a.section, a.text, a.choice, a.level, a.points, r.__id
+      ].map(csvCell).join(','));
+    });
+  });
+  download('cf1-every-answer-' + stamp() + '.csv', lines.join('\n'));
+});
+</script>
+
+</body>
+</html>
