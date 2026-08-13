@@ -16,20 +16,19 @@
 // ---------------------------------------------------------------------------
 
 export const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY_HERE",
-  authDomain: "PASTE_YOUR_PROJECT.firebaseapp.com",
-  projectId: "PASTE_YOUR_PROJECT_ID",
-  storageBucket: "PASTE_YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "PASTE_YOUR_SENDER_ID",
-  appId: "PASTE_YOUR_APP_ID"
+  apiKey: "AIzaSyDzdnWu2_iYXYw98B9FAgr9w40RwZdBxQo",
+  authDomain: "cgp-core-fundamentals.firebaseapp.com",
+  projectId: "cgp-core-fundamentals",
+  storageBucket: "cgp-core-fundamentals.firebasestorage.app",
+  messagingSenderId: "928709885735",
+  appId: "1:928709885735:web:6d639ef56ff4952f447302"
 };
 
 // Firestore collection that assessment submissions are written to.
 // Change this only if you also change it in firestore.rules.
 export const SUBMISSIONS_COLLECTION = "submissions";
 
-// Set to true once you have pasted your real config above. While this is
-// false, the assessment still calculates and prints scores perfectly — it
-// just skips the "Submit" step instead of throwing errors. This lets you
-// test the page before Firebase is wired up.
-export const FIREBASE_ENABLED = false;
+// Live. Set this back to false if you ever want to demo the assessment
+// without recording submissions — scoring and the printable PDF keep working,
+// only the Submit button goes into preview mode.
+export const FIREBASE_ENABLED = true;
