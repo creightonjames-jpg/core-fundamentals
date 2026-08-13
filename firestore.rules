@@ -2,39 +2,40 @@ rules_version = '2';
 
 // =============================================================================
 // Century Golf Partners — Core Fundamentals Self-Assessment
-// Firestore security rules
-// -----------------------------------------------------------------------------
-// Paste this whole file into:
-//   Firebase Console -> Firestore Database -> Rules  ->  Publish
+// Firestore security rules  ·  published in the Firebase console
 //
-// The shape of the deal:
-//   * Any signed-in visitor (including anonymous assessment takers) may CREATE
-//     one submission document. That is all they can do.
-//   * Nobody can read, edit, or delete submissions except accounts you have
-//     explicitly listed in the /admins collection.
-//   * A taker cannot read back even their OWN submission. That is deliberate —
-//     it means a leaked page URL never exposes another club's results.
+// ACCESS MODEL
+// The results dashboard (admin.html) is gated by a PIN checked in the browser.
+// A browser-side PIN cannot gate a database, so the submissions read rule below
+// is open to any visitor. Treat submissions as public information.
+//
+// To make results private again:
+//   1. change  allow read: if true;  to  allow read: if isAdmin();
+//   2. create a Firebase Auth account for each viewer
+//   3. add a document at /admins/{that user's UID}
+//   4. replace the PIN gate in admin.html with a real sign-in
+// The isAdmin() function and /admins rules below are already in place for this.
+//
+// What stays true either way: submissions cannot be edited or deleted by
+// anyone through the web app, and junk writes are rejected.
 // =============================================================================
-
-function isAdmin() {
-  return request.auth != null
-      && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-}
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ---------------------------------------------------------------------
-    // Assessment submissions
-    // ---------------------------------------------------------------------
+    function isAdmin() {
+      return request.auth != null
+          && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
     match /submissions/{docId} {
 
-      // Admins only. Takers get nothing back.
-      allow read: if isAdmin();
+      // Open by design — see ACCESS MODEL above.
+      allow read: if true;
 
-      // Anyone signed in may submit, but the document has to look like a real
-      // submission. This blocks junk writes and stops anyone using your
-      // Firestore as free storage.
+      // Anyone signed in (takers are signed in anonymously) may submit, but the
+      // document has to look like a real submission. This blocks junk writes and
+      // stops anyone using your Firestore as free storage.
       allow create: if request.auth != null
                     && request.resource.data.keys().hasAll([
                          'club', 'takerName', 'level', 'pctOfRange',
@@ -63,26 +64,14 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ---------------------------------------------------------------------
-    // Admin allow-list
-    // ---------------------------------------------------------------------
-    // One document per admin. Document ID = that user's Auth UID.
-    // Create these by hand in the Firebase console. Contents don't matter —
-    // existence is what grants access — but putting the email in the document
-    // makes the list readable six months from now.
-    //
-    //   admins/AbC123xyzUID   ->   { email: "jcreighton@centurygolf.com" }
-    //
-    // Readable by admins so the dashboard could show the list later.
-    // Never writable from the web: adding an admin must happen in the console.
+    // Reserved for the private-results path described above. Not used today.
+    // Never writable from the web: adding a viewer happens in the console.
     match /admins/{uid} {
       allow read: if isAdmin();
       allow write: if false;
     }
 
-    // ---------------------------------------------------------------------
     // Everything else is closed.
-    // ---------------------------------------------------------------------
     match /{document=**} {
       allow read, write: if false;
     }

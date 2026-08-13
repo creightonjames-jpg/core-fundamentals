@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Core Fundamentals Results | Century Golf Partners</title>
+<title>Results — Core Fundamentals | Century Golf Partners</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23122019'/><text x='32' y='43' font-family='Georgia,serif' font-size='26' letter-spacing='1' fill='%23b8922f' text-anchor='middle'>CG</text></svg>">
 <style>
   :root{
@@ -36,20 +36,17 @@
   .head .eyebrow{ letter-spacing:0.3em; font-size:11px; text-transform:uppercase; color:var(--brass-light); margin-bottom:8px; }
   .head h1{ font-size:clamp(22px,3vw,30px); margin:0; font-weight:400; }
 
-  /* ---------- login ---------- */
-  .login-wrap{ max-width:400px; margin:60px auto; padding:0 24px; }
-  .card{
-    background:var(--paper); border:1px solid var(--line); border-radius:3px; padding:30px 28px;
-  }
+  /* ---------- PIN gate ---------- */
+  .gate-wrap{ max-width:380px; margin:70px auto; padding:0 24px; }
+  .card{ background:var(--paper); border:1px solid var(--line); border-radius:3px; padding:32px 28px; text-align:center; }
   .card h2{ margin:0 0 6px; font-size:19px; color:var(--forest); font-weight:500; }
-  .card .sub{ font-size:13px; color:#6a6552; margin:0 0 20px; line-height:1.5; }
-  .field{ margin-bottom:14px; }
-  .field label{ display:block; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#8a8267; margin-bottom:5px; }
-  .field input{
-    width:100%; font-family:inherit; font-size:15px; padding:10px 12px;
-    background:#fff; border:1px solid var(--line); border-radius:2px; color:var(--ink);
+  .card .sub{ font-size:13px; color:#6a6552; margin:0 0 22px; line-height:1.5; }
+  #pin{
+    width:100%; font-family:inherit; font-size:30px; letter-spacing:0.5em;
+    text-align:center; padding:14px 12px 14px 24px;
+    background:#fff; border:1px solid var(--line); border-radius:2px; color:var(--forest);
   }
-  .field input:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+  #pin:focus{ outline:2px solid var(--brass); outline-offset:1px; }
   .btn{
     font-family:inherit; font-size:13.5px; letter-spacing:0.05em; text-transform:uppercase;
     padding:11px 22px; border-radius:2px; cursor:pointer; border:1px solid var(--brass); font-weight:700;
@@ -60,26 +57,19 @@
   .btn-outline:hover{ background:rgba(31,58,46,0.08); }
   .btn-sm{ font-size:11.5px; padding:7px 14px; }
   .btn:disabled{ opacity:0.45; cursor:not-allowed; }
-  .btn-full{ width:100%; }
-  .msg{ font-size:13px; margin-top:12px; line-height:1.5; }
+  .btn-full{ width:100%; margin-top:16px; }
+  .msg{ font-size:13px; margin-top:14px; line-height:1.5; min-height:18px; }
   .msg.err{ color:#9c3a2c; }
-  .msg.ok{ color:#3c6b45; }
 
   /* ---------- dashboard ---------- */
   .dash{ display:none; max-width:1180px; margin:0 auto; padding:26px 24px 60px; }
   .dash.show{ display:block; }
-
-  .toolbar{
-    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-    margin-bottom:18px;
-  }
+  .toolbar{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
   .toolbar .who{ color:#c9c4b3; font-size:12.5px; margin-right:auto; }
-  .toolbar .who b{ color:var(--brass-light); }
   .search{
     font-family:inherit; font-size:14px; padding:9px 12px; min-width:220px;
     background:var(--paper); border:1px solid var(--line); border-radius:2px; color:var(--ink);
   }
-
   .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
   .stat{
     background:rgba(251,249,243,0.06); border:1px solid rgba(216,185,104,0.3);
@@ -94,8 +84,7 @@
   }
   table.grid th{
     text-align:left; font-size:10.5px; letter-spacing:0.13em; text-transform:uppercase;
-    color:#fff; background:var(--forest); padding:11px 14px; cursor:pointer; user-select:none;
-    white-space:nowrap;
+    color:#fff; background:var(--forest); padding:11px 14px; cursor:pointer; user-select:none; white-space:nowrap;
   }
   table.grid th:hover{ background:#27493a; }
   table.grid th .arrow{ color:var(--brass-light); font-size:9px; margin-left:4px; }
@@ -113,15 +102,12 @@
   .empty{ text-align:center; padding:44px 20px; color:#8a8267; font-size:14px; }
 
   /* ---------- detail drawer ---------- */
-  .overlay{
-    display:none; position:fixed; inset:0; background:rgba(8,14,10,0.7); z-index:40;
-  }
+  .overlay{ display:none; position:fixed; inset:0; background:rgba(8,14,10,0.7); z-index:40; }
   .overlay.show{ display:block; }
   .drawer{
     position:fixed; top:0; right:0; height:100%; width:min(720px,100%);
     background:var(--paper); z-index:50; overflow-y:auto;
-    transform:translateX(100%); transition:transform 0.22s ease;
-    border-left:3px solid var(--brass);
+    transform:translateX(100%); transition:transform 0.22s ease; border-left:3px solid var(--brass);
   }
   .drawer.show{ transform:translateX(0); }
   .drawer-head{
@@ -133,15 +119,11 @@
     background:none; border:1px solid rgba(244,239,226,0.4); color:var(--ivory);
     font-size:16px; width:30px; height:30px; border-radius:2px; cursor:pointer; line-height:1;
   }
-  .drawer-head .x:hover{ background:rgba(244,239,226,0.15); }
   .drawer-body{ padding:22px 24px 60px; }
   .d-meta{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px; }
   .d-meta div span{ display:block; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#8a8267; margin-bottom:3px; }
   .d-meta div b{ font-size:15px; font-weight:600; color:var(--forest); }
-  .d-score{
-    border:1px solid var(--brass); background:var(--ivory); padding:16px 20px;
-    text-align:center; margin-bottom:20px;
-  }
+  .d-score{ border:1px solid var(--brass); background:var(--ivory); padding:16px 20px; text-align:center; margin-bottom:20px; }
   .d-score .lv{ font-size:22px; color:var(--forest); font-weight:600; }
   .d-score .dt{ font-size:13px; color:#5a5544; margin-top:5px; line-height:1.5; }
   .d-h4{
@@ -165,15 +147,11 @@
     .d-meta{ grid-template-columns:1fr; }
   }
 
-  /* ---------- print a single submission ---------- */
   @media print{
     @page{ margin:0.6in; }
     body{ background:#fff; }
-    .topnav, .head, .dash, .overlay{ display:none !important; }
-    .drawer{
-      position:static; transform:none; width:100%; height:auto; border:none;
-      overflow:visible; background:#fff;
-    }
+    .topnav, .head, .dash, .overlay, .gate-wrap{ display:none !important; }
+    .drawer{ position:static; transform:none; width:100%; height:auto; border:none; overflow:visible; background:#fff; }
     .drawer-head{ position:static; background:#fff; color:#000; padding:0 0 10px; border-bottom:2px solid #1f3a2e; }
     .drawer-head .x, .drawer-head .btn{ display:none !important; }
     .drawer-body{ padding:16px 0 0; }
@@ -187,7 +165,7 @@
 
 <nav class="topnav">
   <a href="index.html">Self-Assessment</a>
-  <a href="admin.html" class="active">Admin</a>
+  <a href="admin.html" class="active">Results</a>
 </nav>
 
 <div class="head">
@@ -195,34 +173,28 @@
   <h1>Assessment Results</h1>
 </div>
 
-<!-- ---------------- login ---------------- -->
-<div class="login-wrap" id="login-wrap">
+<!-- ---------------- PIN gate ---------------- -->
+<div class="gate-wrap" id="gate-wrap">
   <div class="card">
-    <h2>Administrator sign-in</h2>
-    <p class="sub">This dashboard is restricted. Sign in with the Century Golf admin account.</p>
-    <form id="login-form">
-      <div class="field">
-        <label for="email">Email</label>
-        <input type="email" id="email" autocomplete="username" required>
-      </div>
-      <div class="field">
-        <label for="password">Password</label>
-        <input type="password" id="password" autocomplete="current-password" required>
-      </div>
-      <button type="submit" class="btn btn-primary btn-full" id="login-btn">Sign in</button>
+    <h2>Enter PIN</h2>
+    <p class="sub">Century Golf membership team access.</p>
+    <form id="pin-form">
+      <input type="password" id="pin" inputmode="numeric" autocomplete="off"
+             maxlength="12" aria-label="PIN" autofocus>
+      <button type="submit" class="btn btn-primary btn-full" id="pin-btn">View Results</button>
     </form>
-    <p class="msg" id="login-msg"></p>
+    <p class="msg" id="pin-msg"></p>
   </div>
 </div>
 
 <!-- ---------------- dashboard ---------------- -->
 <div class="dash" id="dash">
   <div class="toolbar">
-    <div class="who">Signed in as <b id="who-email">—</b></div>
+    <div class="who" id="who">Century Golf membership team</div>
     <input type="search" class="search" id="search" placeholder="Filter by club or name…">
     <button class="btn btn-outline btn-sm" id="csv-summary">Export CSV — summary</button>
     <button class="btn btn-outline btn-sm" id="csv-answers">Export CSV — every answer</button>
-    <button class="btn btn-outline btn-sm" id="signout">Sign out</button>
+    <button class="btn btn-outline btn-sm" id="lock">Lock</button>
   </div>
 
   <div class="stats">
@@ -248,7 +220,6 @@
   <div class="empty" id="empty" style="display:none;">No submissions yet.</div>
 </div>
 
-<!-- ---------------- detail drawer ---------------- -->
 <div class="overlay" id="overlay"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-head">
@@ -262,25 +233,60 @@
 <script type="module">
 import { firebaseConfig, SUBMISSIONS_COLLECTION, FIREBASE_ENABLED } from './firebase-config.js';
 
+/* ===========================================================================
+   ACCESS PIN
+   ---------------------------------------------------------------------------
+   IMPORTANT, so nobody is misled later: this PIN is a convenience gate, not
+   security. It is checked here in the browser, which means it is visible to
+   anyone who views the source of this page, and the Firestore rules allow any
+   visitor to read submissions. Treat the results as public information.
+
+   If these results ever need to be genuinely private, the fix is to put the
+   admin UID allow-list back in firestore.rules and use a real sign-in — see
+   the README section "Making results private again".
+   =========================================================================== */
+const ACCESS_PIN = '2026';
+
 const levels = ['101','201','301','401'];
 const levelNames = {'101':'Awareness','201':'Implementation','301':'Excellence','401':'Culture'};
 
-let db=null, auth=null, fs=null, rows=[], sortKey='submittedAt', sortDir=-1;
+let db=null, auth=null, fs=null, rows=[], sortKey='submittedAt', sortDir=-1, booted=false;
 
-function msg(t, cls){
-  const m = document.getElementById('login-msg');
-  m.textContent = t;
-  m.className = 'msg' + (cls ? ' ' + cls : '');
-}
 function esc(s){
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+function pinMsg(t, cls){
+  const m = document.getElementById('pin-msg');
+  m.textContent = t; m.className = 'msg' + (cls ? ' ' + cls : '');
+}
+
+/* ------------------------------------------------------------------ gate */
+document.getElementById('pin-form').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const entered = document.getElementById('pin').value.trim();
+  if(entered !== ACCESS_PIN){
+    pinMsg('That PIN is not correct.', 'err');
+    document.getElementById('pin').value = '';
+    document.getElementById('pin').focus();
+    return;
+  }
+  pinMsg('');
+  document.getElementById('gate-wrap').style.display = 'none';
+  document.getElementById('dash').classList.add('show');
+  if(!booted){ booted = true; await boot(); }
+});
+
+document.getElementById('lock').addEventListener('click', function(){
+  document.getElementById('dash').classList.remove('show');
+  document.getElementById('gate-wrap').style.display = '';
+  document.getElementById('pin').value = '';
+  document.getElementById('pin').focus();
+});
 
 /* ------------------------------------------------------------------ boot */
 async function boot(){
   if(!FIREBASE_ENABLED){
-    msg('Firebase is not connected yet. Paste your config into firebase-config.js and set FIREBASE_ENABLED to true, then reload this page.', 'err');
-    document.getElementById('login-btn').disabled = true;
+    showError('Firebase is not connected. Set FIREBASE_ENABLED to true in firebase-config.js.');
     return;
   }
   try{
@@ -293,64 +299,20 @@ async function boot(){
     auth = authMod.getAuth(app);
     fs = fsMod;
     db = fsMod.getFirestore(app);
-
-    authMod.onAuthStateChanged(auth, function(user){
-      // Anonymous users are assessment takers, not admins — ignore them here.
-      if(user && !user.isAnonymous){
-        document.getElementById('who-email').textContent = user.email || user.uid;
-        document.getElementById('login-wrap').style.display = 'none';
-        document.getElementById('dash').classList.add('show');
-        loadSubmissions();
-      }else{
-        document.getElementById('login-wrap').style.display = '';
-        document.getElementById('dash').classList.remove('show');
-      }
-    });
-
-    document.getElementById('login-form').addEventListener('submit', async function(e){
-      e.preventDefault();
-      const btn = document.getElementById('login-btn');
-      btn.disabled = true;
-      msg('Signing in…', '');
-      try{
-        await authMod.signInWithEmailAndPassword(auth,
-          document.getElementById('email').value.trim(),
-          document.getElementById('password').value);
-        msg('', '');
-      }catch(err){
-        msg(friendlyAuthError(err), 'err');
-      }finally{
-        btn.disabled = false;
-      }
-    });
-
-    document.getElementById('signout').addEventListener('click', function(){
-      authMod.signOut(auth);
-      rows = [];
-      document.getElementById('password').value = '';
-    });
-
+    await authMod.signInAnonymously(auth);
+    await loadSubmissions();
   }catch(err){
     console.error(err);
-    msg('Could not load Firebase: ' + (err && err.message ? err.message : err), 'err');
+    showError('Could not connect to the database: ' + (err && err.message ? err.message : err));
   }
 }
-boot();
 
-function friendlyAuthError(err){
-  const c = err && err.code ? err.code : '';
-  if(c.indexOf('invalid-credential') > -1 || c.indexOf('wrong-password') > -1 || c.indexOf('user-not-found') > -1)
-    return 'That email and password combination did not work.';
-  if(c.indexOf('too-many-requests') > -1)
-    return 'Too many attempts. Wait a minute and try again.';
-  if(c.indexOf('operation-not-allowed') > -1)
-    return 'Email/password sign-in is not enabled in your Firebase project yet (Authentication → Sign-in method).';
-  if(c.indexOf('network') > -1)
-    return 'Network problem reaching Firebase. Check your connection.';
-  return 'Sign-in failed: ' + (err && err.message ? err.message : 'unknown error');
+function showError(text){
+  document.getElementById('grid').style.display = 'none';
+  const e = document.getElementById('empty');
+  e.style.display = ''; e.textContent = text;
 }
 
-/* ------------------------------------------------------------------ load */
 async function loadSubmissions(){
   try{
     const q = fs.query(fs.collection(db, SUBMISSIONS_COLLECTION), fs.orderBy('submittedAt','desc'));
@@ -366,12 +328,9 @@ async function loadSubmissions(){
     renderGrid();
   }catch(err){
     console.error(err);
-    document.getElementById('grid').style.display = 'none';
-    const e = document.getElementById('empty');
-    e.style.display = '';
-    e.textContent = (err && err.code === 'permission-denied')
-      ? 'This account is signed in but is not authorised to read submissions. Add its UID to the admins collection in Firestore (see the README), then reload.'
-      : 'Could not load submissions: ' + (err && err.message ? err.message : err);
+    showError(err && err.code === 'permission-denied'
+      ? 'The database is refusing to return results. Check that the Firestore rules allow reads (see the README).'
+      : 'Could not load submissions: ' + (err && err.message ? err.message : err));
   }
 }
 
@@ -456,8 +415,6 @@ document.getElementById('search').addEventListener('input', renderGrid);
 /* ------------------------------------------------------------------ detail */
 function openDetail(r){
   document.getElementById('d-title').textContent = (r.club || 'Submission') + ' — ' + (r.takerName || '');
-  const b = document.getElementById('drawer-body');
-
   let h = '<div class="d-meta">' +
     '<div><span>Club</span><b>' + esc(r.club) + '</b></div>' +
     '<div><span>Completed by</span><b>' + esc(r.takerName) + '</b></div>' +
@@ -499,11 +456,10 @@ function openDetail(r){
     h += '</table>';
   }
 
-  b.innerHTML = h;
+  document.getElementById('drawer-body').innerHTML = h;
   document.getElementById('drawer').classList.add('show');
   document.getElementById('overlay').classList.add('show');
 }
-
 function closeDetail(){
   document.getElementById('drawer').classList.remove('show');
   document.getElementById('overlay').classList.remove('show');

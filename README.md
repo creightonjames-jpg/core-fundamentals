@@ -2,7 +2,8 @@
 
 A two-page static site. Clubs take the CF#1 "Friends Inviting Friends"
 self-assessment, see their score immediately, print or save a PDF of their
-results, and submit them to a Firebase back end that only you can read.
+results, and submit them to a Firebase back end. Results are reviewed on a
+PIN-gated dashboard.
 
 ```
 index.html          the assessment (public)
@@ -37,8 +38,8 @@ Left sidebar → **Build → Authentication** → **Get started**, then on the
 
 | Provider | Why |
 |---|---|
-| **Anonymous** | Lets a club submit without creating an account. Zero friction — they never see a login screen. |
-| **Email/Password** | This is *your* admin login for the dashboard. |
+| **Anonymous** | Lets a club submit without creating an account. Zero friction — they never see a login screen. This is the only provider the site needs today. |
+| **Email/Password** | Not used by the current PIN-based dashboard. Leave it enabled — you'll want it if you ever follow "Making results private again". |
 
 ### 4. Register the web app and copy your config
 
@@ -68,23 +69,48 @@ Left sidebar → **Build → Authentication** → **Get started**, then on the
 These rules say: anyone may submit once, nobody may read anything unless their
 UID is in the `admins` collection.
 
-### 6. Create your admin account
+### 6. Viewing results — the PIN
 
-1. **Authentication → Users** tab → **Add user**.
-2. Enter your email (`jcreighton@centurygolf.com`) and a strong password.
-3. When it appears in the list, **copy the User UID** — the long string in the
-   right-hand column.
+There is no admin account to create. The results page at `admin.html` asks for
+a **PIN**, set at the top of that file:
 
-### 7. Put your UID on the admin allow-list
+```js
+const ACCESS_PIN = '2026';
+```
 
-1. **Firestore Database → Data** tab → **Start collection**.
-2. Collection ID: `admins` — exactly that, lowercase.
-3. Document ID: **paste your UID from step 6.**
-4. Add one field so the document isn't empty:
-   - Field `email`, type `string`, value `jcreighton@centurygolf.com`
-5. **Save.**
+Change it by editing that one line and committing.
 
-That's it. Repeat steps 6–7 for anyone else who should see results.
+> **Please read this once so nobody is surprised later.** The PIN is checked in
+> the browser, not by the database. That means two things are true:
+>
+> 1. Anyone who views the page source can read the PIN.
+> 2. The Firestore rules allow **any visitor to read submissions**, PIN or no
+>    PIN, because a browser-side PIN cannot gate a database.
+>
+> In practice, treat every submission as public information. This was a
+> deliberate trade for convenience. If that ever stops being the right trade,
+> see "Making results private again" below — it is a 10-minute change.
+
+Submissions are still **immutable**: nobody, including you, can edit or delete
+one through the web app. Corrections are made in the Firebase console on purpose.
+
+---
+
+## Making results private again
+
+If you later want results genuinely restricted:
+
+1. In `firestore.rules`, change the submissions read rule from
+   `allow read: if true;` to `allow read: if isAdmin();` and publish.
+2. In Firebase → **Authentication → Users → Add user**, create an account for
+   each person who should see results.
+3. In Firestore → **Data**, create a collection `admins` with one document per
+   viewer, the **document ID being that person's Auth UID**.
+4. Swap the PIN gate in `admin.html` for a Firebase email/password sign-in
+   (or Google sign-in, which needs no passwords at all).
+
+The `isAdmin()` function and the `/admins` rules are already in place for this —
+nothing needs to be rebuilt.
 
 ---
 
@@ -103,8 +129,7 @@ That's it. Repeat steps 6–7 for anyone else who should see results.
    https://<your-username>.github.io/core-fundamentals/
    ```
 
-Send clubs the plain link. Keep `.../admin.html` to yourself — though the rules
-mean it shows nothing useful even if someone finds it.
+Send clubs the plain link. Keep `.../admin.html` and the PIN to yourselves.
 
 ---
 
@@ -143,7 +168,7 @@ section-by-section breakdown appear on screen. Then they can:
   answers. In the print dialog choose *Save as PDF* as the destination. Works
   on phones too. This works whether or not they submit.
 
-**You review results.** Open `admin.html`, sign in, and you get:
+**You review results.** Open `admin.html`, enter the PIN, and you get:
 
 - Four summary tiles — submissions, clubs reporting, average % of range, most
   common level
@@ -192,9 +217,9 @@ python3 -m http.server 8000
 
 ## Troubleshooting
 
-**"Missing or insufficient permissions" in the dashboard.** You are signed in
-but your UID is not on the allow-list. Re-check step 7 — the document ID must
-be the UID exactly, and the collection must be named `admins`.
+**"The database is refusing to return results."** The Firestore rules were
+changed. The submissions read rule must be `allow read: if true;` for the
+PIN-gated dashboard to work.
 
 **Submit fails with a permission error.** Anonymous sign-in is probably off.
 Authentication → Sign-in method → enable **Anonymous**.
