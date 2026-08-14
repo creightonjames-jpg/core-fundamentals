@@ -24,9 +24,13 @@ export const firebaseConfig = {
   appId: "1:928709885735:web:6d639ef56ff4952f447302"
 };
 
-// Firestore collection that assessment submissions are written to.
-// Change this only if you also change it in firestore.rules.
+// Firestore collections. Change these only if you also change firestore.rules.
 export const SUBMISSIONS_COLLECTION = "submissions";
+
+// Work-in-progress answers, one document per Club per Core Fundamental.
+// Saved automatically as a club works, so anyone on their team can resume from
+// any computer.
+export const DRAFTS_COLLECTION = "drafts";
 
 // Live. Set this back to false if you ever want to demo the assessment
 // without recording submissions — scoring and the printable PDF keep working,

@@ -3,1302 +3,193 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CF#1 — Friends Inviting Friends: Self-Assessment | Century Golf Partners</title>
+<title>Membership Core Fundamentals | Century Golf Partners</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23122019'/><text x='32' y='43' font-family='Georgia,serif' font-size='26' letter-spacing='1' fill='%23b8922f' text-anchor='middle'>CG</text></svg>">
-<style>
-  :root{
-    --ink:#1b241d;
-    --forest:#1f3a2e;
-    --forest-deep:#122019;
-    --brass:#b8922f;
-    --brass-light:#d8b968;
-    --ivory:#f4efe2;
-    --paper:#fbf9f3;
-    --line:#d9d0b8;
-    --pass:#3c6b45;
-    --alert:#8c3b2f;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--forest-deep);
-    font-family:'Iowan Old Style','Palatino Linotype',Palatino, Georgia, serif;
-    color:var(--ink);
-    padding-bottom:40px;
-  }
-
-  /* ---------- top nav ---------- */
-  .topnav{
-    display:flex;
-    justify-content:center;
-    gap:26px;
-    padding:14px 20px;
-    background:#0c1610;
-    border-bottom:1px solid rgba(216,185,104,0.25);
-  }
-  .topnav a{
-    color:#c9c4b3;
-    text-decoration:none;
-    font-size:12px;
-    letter-spacing:0.18em;
-    text-transform:uppercase;
-  }
-  .topnav a:hover{ color:var(--brass-light); }
-  .topnav a.active{ color:var(--brass-light); border-bottom:1px solid var(--brass); padding-bottom:3px; }
-
-  .masthead{
-    text-align:center;
-    padding:44px 20px 32px;
-    color:var(--ivory);
-    border-bottom:1px solid rgba(216,185,104,0.35);
-  }
-  .masthead .eyebrow{
-    letter-spacing:0.35em;
-    font-size:11px;
-    text-transform:uppercase;
-    color:var(--brass-light);
-    margin-bottom:12px;
-  }
-  .masthead h1{
-    font-size:clamp(22px,3.2vw,34px);
-    margin:0 auto 14px;
-    font-weight:400;
-    max-width:820px;
-    line-height:1.35;
-  }
-  .masthead p{
-    max-width:640px;
-    margin:0 auto;
-    color:#d8d3c4;
-    font-size:14.5px;
-    line-height:1.6;
-  }
-
-  /* ---------- identity ---------- */
-  .identity{
-    max-width:880px;
-    margin:26px auto 0;
-    padding:0 24px;
-  }
-  .identity-card{
-    background:rgba(251,249,243,0.06);
-    border:1px solid rgba(216,185,104,0.35);
-    border-radius:3px;
-    padding:20px 22px;
-    display:grid;
-    grid-template-columns:minmax(220px, 1fr) 1.6fr;
-    gap:16px;
-    align-items:start;
-  }
-  .field label{
-    display:block;
-    color:var(--brass-light);
-    font-size:11px;
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-    margin-bottom:6px;
-  }
-  .field input{
-    width:100%;
-    font-family:inherit;
-    font-size:15px;
-    padding:10px 12px;
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:2px;
-    color:var(--ink);
-  }
-  .field select{
-    width:100%;
-    font-family:inherit;
-    font-size:15px;
-    padding:10px 12px;
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:2px;
-    color:var(--ink);
-    appearance:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%231f3a2e' stroke-width='1.6'/%3E%3C/svg%3E");
-    background-repeat:no-repeat;
-    background-position:right 12px center;
-    padding-right:34px;
-    cursor:pointer;
-  }
-  .field textarea{
-    width:100%;
-    font-family:inherit;
-    font-size:15px;
-    padding:10px 12px;
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:2px;
-    color:var(--ink);
-    line-height:1.5;
-    resize:vertical;
-    min-height:46px;
-  }
-  .field textarea::placeholder{ color:#9a9280; }
-  .field input:focus, .field select:focus, .field textarea:focus{ outline:2px solid var(--brass); outline-offset:1px; }
-  .field select:invalid, .field select option[value=""]{ color:#8a8267; }
-  .field .req{ color:var(--brass); }
-
-  .legend{
-    max-width:880px;
-    margin:22px auto 0;
-    padding:0 24px;
-  }
-  .legend-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:10px;
-  }
-  .legend-item{
-    background:rgba(251,249,243,0.06);
-    border:1px solid rgba(216,185,104,0.3);
-    border-radius:3px;
-    padding:12px 14px;
-    color:var(--ivory);
-  }
-  .legend-item b{ color:var(--brass-light); display:block; font-size:13px; margin-bottom:3px; }
-  .legend-item span{ font-size:12px; color:#c9c4b3; line-height:1.4; }
-
-  .wrap{ max-width:880px; margin:0 auto; padding:30px 24px 0; }
-
-  .stmt{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-left:4px solid var(--forest);
-    border-radius:3px;
-    padding:16px 20px;
-    margin-bottom:12px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:18px;
-    flex-wrap:wrap;
-    transition:border-left-color 0.15s;
-  }
-  .stmt.answered{ border-left-color:var(--brass); }
-  .stmt-num{
-    font-size:12px;
-    color:var(--brass);
-    min-width:24px;
-    font-weight:700;
-  }
-  .stmt-text{
-    flex:1 1 320px;
-    font-size:14.5px;
-    line-height:1.5;
-  }
-  .score-key{
-    display:block;
-    margin-top:5px;
-    font-size:12px;
-    color:var(--brass);
-    font-family:Georgia, serif;
-    letter-spacing:0.02em;
-  }
-  .section-header{
-    color:var(--ivory);
-    font-size:15px;
-    font-weight:700;
-    letter-spacing:0.04em;
-    margin: 28px 0 12px;
-    padding-bottom:8px;
-    border-bottom: 1px solid rgba(216,185,104,0.4);
-  }
-  .section-header:first-child{ margin-top:0; }
-  .choices{
-    display:flex;
-    gap:6px;
-    flex:0 0 auto;
-  }
-  .choices button{
-    font-family:inherit;
-    font-size:12.5px;
-    padding:8px 16px;
-    border:1px solid var(--forest);
-    background:transparent;
-    color:var(--forest);
-    cursor:pointer;
-    border-radius:2px;
-  }
-  .choices button:hover{ background:rgba(31,58,46,0.08); }
-  .choices button.active{
-    background:var(--forest);
-    color:#fff;
-  }
-
-  /* ---------- sticky action bar ---------- */
-  .compute-bar{
-    position:sticky;
-    bottom:0;
-    background:var(--forest-deep);
-    border-top:1px solid var(--brass);
-    padding:14px 24px;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    gap:20px;
-    flex-wrap:wrap;
-    z-index:10;
-  }
-  .progress{
-    color:#c9c4b3;
-    font-size:12.5px;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    min-width:150px;
-    text-align:right;
-  }
-  .progress b{ color:var(--brass-light); }
-  .compute-btn{
-    font-family:inherit;
-    font-size:15px;
-    letter-spacing:0.06em;
-    text-transform:uppercase;
-    padding:13px 40px;
-    background:var(--brass);
-    color:var(--forest-deep);
-    border:none;
-    border-radius:2px;
-    cursor:pointer;
-    font-weight:700;
-  }
-  .compute-btn:hover{ background:var(--brass-light); }
-  .bar-hint{ color:#8f8a79; font-size:12px; min-width:150px; }
-
-  /* ---------- results ---------- */
-  .results{
-    max-width:880px;
-    margin:34px auto 0;
-    padding:0 24px;
-    display:none;
-  }
-  .results.show{ display:block; }
-  .result-summary{
-    background:var(--ivory);
-    border:1px solid var(--brass);
-    border-radius:3px;
-    padding:30px 32px;
-    text-align:center;
-    margin-bottom:20px;
-  }
-  .result-summary .eyebrow{
-    letter-spacing:0.3em;
-    text-transform:uppercase;
-    font-size:11px;
-    color:var(--brass);
-    margin-bottom:10px;
-  }
-  .result-summary h3{ margin:0 0 8px; font-size:30px; color:var(--forest); font-weight:500; }
-  .result-summary p{ margin:0 0 6px; color:#4a4636; font-size:14.5px; line-height:1.55; }
-  .result-summary .who{
-    margin-top:14px;
-    padding-top:12px;
-    border-top:1px solid var(--line);
-    font-size:13px;
-    color:#6a6552;
-  }
-  .result-summary .team{
-    margin-top:6px;
-    font-size:12.5px;
-    color:#8a8267;
-    line-height:1.5;
-  }
-  .dist-grid{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:14px;
-    margin-bottom:22px;
-  }
-  .dist-tile{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:3px;
-    padding:16px 12px;
-    text-align:center;
-  }
-  .dist-tile .lv{ font-size:12px; letter-spacing:0.1em; color:#8a8267; text-transform:uppercase; }
-  .dist-tile .count{ font-size:24px; color:var(--forest); margin:6px 0 2px; font-weight:600; }
-  .dist-tile .pct{ font-size:12px; color:#6a6552; }
-
-  /* priorities */
-  .priorities{
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-left:4px solid var(--brass);
-    border-radius:3px;
-    padding:6px 0 10px;
-    margin-bottom:22px;
-  }
-  .priorities h4{
-    margin:16px 24px 4px;
-    font-size:13px;
-    letter-spacing:0.16em;
-    text-transform:uppercase;
-    color:var(--brass);
-    font-weight:700;
-  }
-  .priorities .pri-lede{
-    margin:0 24px 12px;
-    font-size:13px;
-    color:#6a6552;
-    line-height:1.5;
-  }
-  .pri-row{
-    display:flex;
-    align-items:flex-start;
-    gap:14px;
-    padding:11px 24px;
-    border-top:1px solid #eae4d2;
-    font-size:14.5px;
-    line-height:1.5;
-  }
-  .pri-rank{
-    flex:0 0 22px;
-    font-weight:700;
-    color:var(--brass);
-    font-size:13px;
-    padding-top:2px;
-  }
-  .pri-text{ flex:1 1 auto; }
-  .pri-text .pri-q{
-    display:block;
-    margin-top:4px;
-    font-size:12px;
-    color:#8a8267;
-    font-family:Georgia, serif;
-  }
-  .pri-tag{
-    flex:0 0 auto;
-    align-self:center;
-    font-size:11px;
-    letter-spacing:0.08em;
-    text-transform:uppercase;
-    padding:3px 9px;
-    border-radius:10px;
-    white-space:nowrap;
-    border:1px solid var(--forest);
-    color:var(--forest);
-    background:rgba(31,58,46,0.08);
-  }
-  .pri-tag.foundation{
-    border-color:var(--brass);
-    color:#7d6320;
-    background:rgba(184,146,47,0.14);
-  }
-  .pri-more{
-    margin:12px 24px 4px;
-    font-size:12.5px;
-    color:#8a8267;
-    font-style:italic;
-  }
-  .pri-clear{
-    margin:4px 24px 10px;
-    font-size:14.5px;
-    color:var(--pass);
-    line-height:1.5;
-  }
-
-  /* action row */
-  .action-row{
-    display:flex;
-    gap:12px;
-    justify-content:center;
-    flex-wrap:wrap;
-    padding-bottom:10px;
-  }
-  .btn{
-    font-family:inherit;
-    font-size:14px;
-    letter-spacing:0.05em;
-    text-transform:uppercase;
-    padding:13px 28px;
-    border-radius:2px;
-    cursor:pointer;
-    border:1px solid var(--brass);
-    font-weight:700;
-  }
-  .btn-primary{ background:var(--brass); color:var(--forest-deep); border-color:var(--brass); }
-  .btn-primary:hover:not(:disabled){ background:var(--brass-light); }
-  .btn-ghost{ background:transparent; color:var(--brass-light); }
-  .btn-ghost:hover{ background:rgba(216,185,104,0.12); }
-  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
-  .submit-note{
-    text-align:center;
-    color:#8f8a79;
-    font-size:12.5px;
-    margin:12px 0 0;
-    line-height:1.5;
-  }
-  .submit-note.ok{ color:var(--brass-light); }
-  .submit-note.err{ color:#e08a7c; }
-
-  @media (max-width:640px){
-    .legend-grid, .dist-grid{ grid-template-columns:repeat(2,1fr); }
-    .identity-card{ grid-template-columns:1fr; }
-    .stmt{ flex-direction:column; align-items:flex-start; }
-    .choices button{ padding:10px 24px; }
-    .progress, .bar-hint{ text-align:center; min-width:0; }
-    .bd-meter{ display:none; }
-  }
-
-  /* =======================================================================
-     PRINT / SAVE-AS-PDF
-     Everything on screen is hidden; #print-report is shown instead.
-     ======================================================================= */
-  #print-report{ display:none; }
-
-  @media print{
-    @page{ margin:0.6in 0.65in; }
-    body{
-      background:#fff !important;
-      color:#000;
-      padding:0;
-      font-size:10.5pt;
-    }
-    .topnav, .masthead, .identity, .legend, .wrap,
-    .compute-bar, .results, .action-row{ display:none !important; }
-
-    #print-report{ display:block !important; }
-
-    .pr-head{
-      border-bottom:2.5px solid #1f3a2e;
-      padding-bottom:10px;
-      margin-bottom:16px;
-    }
-    .pr-head .pr-org{
-      font-size:8.5pt;
-      letter-spacing:0.24em;
-      text-transform:uppercase;
-      color:#b8922f;
-      margin-bottom:5px;
-    }
-    .pr-head h1{
-      font-size:15pt;
-      margin:0 0 4px;
-      font-weight:600;
-      color:#1f3a2e;
-      line-height:1.3;
-    }
-    .pr-head .pr-sub{ font-size:9.5pt; color:#555; }
-
-    .pr-meta{
-      display:flex;
-      gap:26px;
-      flex-wrap:wrap;
-      font-size:10pt;
-      margin-bottom:16px;
-    }
-    .pr-meta div span{
-      display:block;
-      font-size:7.5pt;
-      letter-spacing:0.14em;
-      text-transform:uppercase;
-      color:#888;
-      margin-bottom:2px;
-    }
-    .pr-meta div b{ font-weight:600; }
-
-    .pr-team{
-      font-size:10pt;
-      margin-bottom:16px;
-      padding-bottom:10px;
-      border-bottom:1px solid #e8e2d0;
-    }
-    .pr-team span{
-      display:block;
-      font-size:7.5pt;
-      letter-spacing:0.14em;
-      text-transform:uppercase;
-      color:#888;
-      margin-bottom:3px;
-    }
-    .pr-team b{ font-weight:600; line-height:1.5; white-space:pre-line; }
-
-    .pr-score{
-      border:1.5px solid #b8922f;
-      background:#faf7ee !important;
-      -webkit-print-color-adjust:exact;
-      print-color-adjust:exact;
-      padding:14px 18px;
-      margin-bottom:16px;
-      text-align:center;
-    }
-    .pr-score .pr-lv{
-      font-size:19pt;
-      color:#1f3a2e;
-      font-weight:600;
-      margin-bottom:4px;
-    }
-    .pr-score .pr-detail{ font-size:9.5pt; color:#444; line-height:1.5; }
-
-    .pr-h2{
-      font-size:8.5pt;
-      letter-spacing:0.2em;
-      text-transform:uppercase;
-      color:#b8922f;
-      font-weight:700;
-      border-bottom:1px solid #d9d0b8;
-      padding-bottom:4px;
-      margin:0 0 8px;
-    }
-    .pr-block{ margin-bottom:16px; }
-
-    table.pr-table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:9.5pt;
-    }
-    table.pr-table th{
-      text-align:left;
-      font-size:7.5pt;
-      letter-spacing:0.12em;
-      text-transform:uppercase;
-      color:#888;
-      border-bottom:1px solid #d9d0b8;
-      padding:4px 6px;
-      font-weight:600;
-    }
-    table.pr-table td{
-      padding:4px 6px;
-      border-bottom:0.5px solid #e8e2d0;
-      vertical-align:top;
-    }
-    table.pr-table td.num{ width:24px; color:#b8922f; font-weight:600; }
-    table.pr-table td.ans{ width:44px; text-align:center; font-weight:600; }
-    table.pr-table td.lvl{ width:52px; text-align:center; color:#1f3a2e; font-weight:600; }
-    table.pr-table tr{ page-break-inside:avoid; }
-    .pr-sec-row td{
-      background:#f2eede !important;
-      -webkit-print-color-adjust:exact;
-      print-color-adjust:exact;
-      font-weight:700;
-      font-size:9pt;
-      color:#1f3a2e;
-      padding-top:6px;
-      padding-bottom:6px;
-    }
-    .pr-answers{ page-break-before:auto; }
-    .pr-foot{
-      margin-top:18px;
-      padding-top:8px;
-      border-top:1px solid #d9d0b8;
-      font-size:8pt;
-      color:#999;
-      display:flex;
-      justify-content:space-between;
-    }
-  }
-</style>
+<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 
 <nav class="topnav">
-  <a href="index.html" class="active">Self-Assessment</a>
+  <a href="index.html" class="active">Core Fundamentals</a>
   <a href="admin.html">Results</a>
 </nav>
 
 <div class="masthead">
-  <div class="eyebrow">Core Fundamental No. 1 — Self-Assessment</div>
-  <h1>We partner with the Board of Governors, Ambassador Committee, and all Club Committees in the creation of an effective and inspirational <strong>&ldquo;Friends Inviting Friends&rdquo;</strong> environment.</h1>
-  <p>This is not a checklist — it's a self-reflection. For each statement, honestly choose the stage that best describes where your Club stands today: 101 (Awareness), 201 (Implementation), 301 (Excellence), or 401 (Culture).</p>
+  <div class="eyebrow">Century Golf Partners</div>
+  <h1>Membership Core Fundamentals</h1>
+  <p>Ten self-assessments. Choose your Club, then work through them in any order —
+     your answers save as you go, so you can stop whenever you need to and pick up
+     where the team left off.</p>
 </div>
 
 <div class="identity">
-  <div class="identity-card">
+  <div class="identity-card" style="grid-template-columns:1fr;">
     <div class="field">
-      <label for="club">Club <span class="req">*</span></label>
-      <select id="club" autocomplete="organization">
+      <label for="club">Your Club <span class="req">*</span></label>
+      <select id="club">
         <option value="">Select your Club…</option>
       </select>
     </div>
-    <div class="field">
-      <label for="taker">Participating Team Members <span class="req">*</span></label>
-      <textarea id="taker" rows="2"
-        placeholder="Everyone who worked on this assessment — one per line, or separated by commas"></textarea>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="pre-select" style="color:#8f8a79;font-size:14px;line-height:1.6;padding:34px 0 10px;text-align:center;">
+    Select your Club above to see the ten fundamentals and your progress.
+  </div>
+
+  <div id="dash" style="display:none;">
+    <div class="hub-summary">
+      <div class="hub-stat"><div class="k">Completed</div><div class="v" id="s-done">—</div></div>
+      <div class="hub-stat"><div class="k">In progress</div><div class="v" id="s-prog">—</div></div>
+      <div class="hub-stat"><div class="k">Not started</div><div class="v" id="s-none">—</div></div>
+      <div class="hub-stat"><div class="k">Questions answered</div><div class="v" id="s-qs">—</div></div>
     </div>
-  </div>
-</div>
 
-<div class="legend">
-  <div class="legend-grid">
-    <div class="legend-item"><b>101 Awareness</b><span>We know it exists, we've introduced it, and we understand why it matters.</span></div>
-    <div class="legend-item"><b>201 Implementation</b><span>We are doing it consistently and it's visible to members, team, and Board.</span></div>
-    <div class="legend-item"><b>301 Excellence</b><span>It's trained, it's tracked, and every layer of our organization owns their piece of it.</span></div>
-    <div class="legend-item"><b>401 Culture</b><span>This is who we are — members feel it, team lives it, Board leads it, unasked.</span></div>
-  </div>
-</div>
+    <div class="section-label">The Ten Fundamentals</div>
+    <div class="cf-grid" id="cf-grid"></div>
 
-<div class="wrap" id="statement-wrap"></div>
-
-<div class="compute-bar">
-  <div class="progress" id="progress"><b>0</b> of 25 answered</div>
-  <button class="compute-btn" id="calc-btn">Calculate Our Score</button>
-  <div class="bar-hint" id="bar-hint"></div>
-</div>
-
-<div class="results" id="results">
-  <div class="result-summary">
-    <div class="eyebrow">Assessment Result</div>
-    <h3 id="result-level">—</h3>
-    <p id="result-avg"></p>
-    <p id="result-desc"></p>
-    <div class="who" id="result-who"></div>
-    <div class="team" id="result-team"></div>
-  </div>
-
-  <div class="dist-grid" id="dist-grid"></div>
-
-  <div class="priorities">
-    <h4>What to work on next</h4>
-    <p class="pri-lede" id="pri-lede"></p>
-    <div id="pri-rows"></div>
-    <p class="pri-more" id="pri-more" style="display:none;"></p>
-  </div>
-
-  <div class="action-row">
-    <button class="btn btn-primary" id="submit-btn">Submit to Century Golf</button>
-    <button class="btn btn-ghost" id="print-btn">Print / Save as PDF</button>
-  </div>
-  <p class="submit-note" id="submit-note"></p>
-</div>
-
-<!-- ===================== printable report (print only) ===================== -->
-<div id="print-report">
-  <div class="pr-head">
-    <div class="pr-org">Century Golf Partners &nbsp;·&nbsp; Membership Core Fundamentals</div>
-    <h1>Core Fundamental No.&nbsp;1 — Friends Inviting Friends</h1>
-    <div class="pr-sub">Club Self-Assessment Results</div>
-  </div>
-
-  <div class="pr-meta">
-    <div><span>Club</span><b id="pr-club">—</b></div>
-    <div><span>Date</span><b id="pr-date">—</b></div>
-    <div><span>Questions answered</span><b id="pr-answered">—</b></div>
-  </div>
-
-  <div class="pr-team">
-    <span>Participating team members</span>
-    <b id="pr-taker">—</b>
-  </div>
-
-  <div class="pr-score">
-    <div class="pr-lv" id="pr-level">—</div>
-    <div class="pr-detail" id="pr-detail"></div>
-  </div>
-
-  <div class="pr-block">
-    <div class="pr-h2">What to work on next</div>
-    <table class="pr-table" id="pr-priorities"></table>
-  </div>
-
-  <div class="pr-block pr-answers">
-    <div class="pr-h2">Every answer</div>
-    <table class="pr-table" id="pr-all"></table>
-  </div>
-
-  <div class="pr-foot">
-    <span>Century Golf Partners — Membership Core Fundamentals</span>
-    <span id="pr-foot-right"></span>
+    <p style="color:#7f7a6b;font-size:12.5px;line-height:1.7;margin:30px 0 0;text-align:center;">
+      Progress is stored against your Club, so anyone on your team can carry on from
+      any computer. If two people open the same fundamental at once, the last one to
+      answer wins — worth a quick word before you both dive in.
+    </p>
   </div>
 </div>
 
 <script type="module">
-import { firebaseConfig, SUBMISSIONS_COLLECTION, FIREBASE_ENABLED } from './firebase-config.js';
+import { FUNDAMENTALS, CLUBS } from './data/manifest.js';
+import { clubProgress, esc, relativeTime, LEVEL_NAMES } from './shared.js';
+import { FIREBASE_ENABLED } from './firebase-config.js';
 
-/* ---------------------------------------------------------------------------
-   1. THE INSTRUMENT
-   Statements, sections, and the Yes/No -> level mapping. Unchanged from the
-   original scorecard. To edit a question, edit it here and nowhere else.
---------------------------------------------------------------------------- */
-const statements = [
-  { section: "A. Invitation Design & Physical Standards", text: "Have invitations been designed and approved with matching cardstock and envelopes?", yes: "101", no: "101", action: "Design your Club invitation on proper cardstock with matching envelopes, and get it approved." },
-  { section: "A. Invitation Design & Physical Standards", text: "Are your invitation templates saved on your computer for both the Member invitation and the Ambassador invitation?", yes: "101", no: "101", action: "Save both invitation templates — Member and Ambassador — where they can be found and reprinted." },
-  { section: "A. Invitation Design & Physical Standards", text: "Do the GM and Enrollment Director send any and all changes to your Club’s invitation to your Membership Regional for approval?", yes: "101", no: "101", action: "Route every invitation change through your Membership Regional before anything is printed." },
-  { section: "A. Invitation Design & Physical Standards", text: "Is your invitation sanctioned by Club leadership (Board or Ambassador Committee), with their names printed on it?", yes: "101", no: "101", action: "Have the Board or Ambassador Committee sanction the invitation, with their names printed on it." },
-  { section: "A. Invitation Design & Physical Standards", text: "Do the GM and Department heads know where to find the Invitation templates and can they print an invitation when you are not available?", yes: "201", no: "101", action: "Show the GM and department heads where the templates live, so anyone can print an invitation when you are out." },
-  { section: "A. Invitation Design & Physical Standards", text: "Do all department heads and front of the house staff know where to send members to get an invitation for a friend?", yes: "201", no: "101", action: "Make sure every department head and front-of-house team member knows where to send a member who wants an invitation." },
-  { section: "A. Invitation Design & Physical Standards", text: "Are all invitations presented enclosed in matching envelopes with the invited friend’s name handwritten on it?", yes: "201", no: "101", action: "Present every invitation in a matching envelope with the friend’s name handwritten on it." },
-  { section: "A. Invitation Design & Physical Standards", text: "Is a postage stamp (not a postage machine) always used when mailing the invitation?", yes: "101", no: "101", action: "Use a real postage stamp on every mailed invitation — never a postage meter." },
-
-  { section: "B. Invitation as a Required Gate", text: "Are all prospective members presented with the appropriate Invitation?", yes: "101", no: "101", action: "Present the appropriate invitation to every prospective member, without exception." },
-  { section: "B. Invitation as a Required Gate", text: "Is the Invitation presented or mailed before any discussion of the preferred membership offer?", yes: "201", no: "101", action: "Present or mail the invitation before any conversation about the membership offer." },
-  { section: "B. Invitation as a Required Gate", text: "Is every prospective member presented a formal invitation to join before advancing to the application?", yes: "101", no: "101", action: "Give every prospect a formal invitation to join before they reach the application." },
-
-  { section: "C. Annual Club Training & Committee Education", text: "Do Department heads and front-of-house staff complete an annual Membership by Invitation strategy and processes refresher including education on “private club language”?", yes: "201", no: "101", action: "Run the annual Membership by Invitation refresher for department heads and front-of-house staff, including private club language." },
-  { section: "C. Annual Club Training & Committee Education", text: "Do the Board, Ambassador Committee, and Club Sports Committees each participate annually in a Membership by Invitation presentation and confirm their understanding of the strategy, processes and importance?", yes: "201", no: "101", action: "Deliver the annual Membership by Invitation presentation to the Board, Ambassador Committee, and Sports Committees, and confirm they understood it." },
-
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the GM lead an annual comprehensive plan to consistently educate and re-educate members on the importance of inviting friends?", yes: "301", no: "201", action: "Have the GM own a written annual plan for educating members on why inviting friends matters." },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through bi-weekly member communications?", yes: "201", no: "101", action: "Put Invitation education into member communications on a bi-weekly rhythm." },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through clubhouse signage (posters, scan cards, tent cards, golf cart signage, television monitors)?", yes: "201", no: "101", action: "Get Invitation collateral visible in the clubhouse — posters, tent cards, scan cards, cart signage, monitors." },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through a physical invitation on every sports desk?", yes: "301", no: "201", action: "Place a physical invitation on every sports desk." },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club train all department head and front of the house staff on their role in showing the invitation to members daily in their department?", yes: "401", no: "301", action: "Train every department head and front-of-house team member on their daily role in showing the invitation to members." },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Enrollment Director do a daily club walk-through to confirm collateral is in place?", yes: "401", no: "201", action: "Have the Enrollment Director walk the Club daily to confirm collateral is where it belongs." },
-
-  { section: "E. Invitation Language & New Member Culture", text: "Is the Club using invitation language (“you are invited”) for all member events?", yes: "301", no: "201", action: "Switch to invitation language — “you are invited” — across every member event." },
-  { section: "E. Invitation Language & New Member Culture", text: "Are new members reminded that they now have their own Member Invitation to give to friends?", yes: "301", no: "201", action: "Remind every new member that they now hold their own Member Invitation to give a friend." },
-
-  { section: "F. Financial Literacy Education (Board & Membership)", text: "Is there consistent education for the Board and general membership on the historical attrition and member replacement needs of the Club?", yes: "301", no: "201", action: "Educate the Board and membership on the Club’s historical attrition and how many members must be replaced each year." },
-  { section: "F. Financial Literacy Education (Board & Membership)", text: "Is there consistent education on the importance of a Full Privilege member waitlist and dues line for the continual improvement of the Club and its amenities and services including its financial impact?", yes: "301", no: "201", action: "Educate the Board and membership on what a Full Privilege waitlist and a healthy dues line fund at the Club." },
-
-  { section: "G. CRM Tracking", text: "Is the Enrollment Director using a CRM daily to track every invitation issued, every prospect named, and every member conversation — ensuring nothing falls through the cracks?", yes: "301", no: "201", action: "Get the Enrollment Director into the CRM daily — every invitation issued, every prospect, every member conversation." },
-  { section: "G. CRM Tracking", text: "Does the GM verify weekly the effective use of the CRM program by the Enrollment Director in their weekly meeting?", yes: "401", no: "301", action: "Add CRM review to the GM’s weekly meeting with the Enrollment Director." }
-];
-
-/* ---------------------------------------------------------------------------
-   CLUB LIST
-   To add, remove, or rename a Club, edit this one array. The dropdown, the
-   printed report, and the results dashboard all read from it.
---------------------------------------------------------------------------- */
-const CLUBS = [
-  "Anthem Country Club",
-  "Balcones Country Club",
-  "Ballantyne Country Club",
-  "Bear Creek Country Club",
-  "Canyon Oaks Country Club",
-  "Chenal Country Club",
-  "The Citrus Club",
-  "Eagle's Landing Country Club",
-  "El Camino Country Club",
-  "Las Posas Country Club",
-  "Marbella Country Club",
-  "The Medallion Club",
-  "Monterey Country Club",
-  "The Oregon Golf Club",
-  "Palm Valley Country Club",
-  "PGA West",
-  "The Club at Prescott Lakes",
-  "Spanish Hills Country Club",
-  "Sunset Hills Country Club",
-  "Sycamore Creek Country Club",
-  "Sylvania Country Club",
-  "The Nelson Golf and Sports Club",
-  "Toledo Country Club",
-  "The Valor Club",
-  "Wood Ranch Country Club",
-  "The Club at Wynstone"
-];
-
-(function populateClubs(){
-  const sel = document.getElementById('club');
-  CLUBS.forEach(function(name){
-    const o = document.createElement('option');
-    o.value = name;
-    o.textContent = name;
-    sel.appendChild(o);
-  });
-})();
-
-const levels = ['101','201','301','401'];
-const levelValue = {'101':1,'201':2,'301':3,'401':4};
-const levelNames = {'101':'Awareness','201':'Implementation','301':'Excellence','401':'Culture'};
-const levelDesc = {
-  '101':'Awareness — you know it exists, you have introduced it, and you understand why it matters.',
-  '201':'Implementation — you are doing it consistently and it is visible to members, team, and Board.',
-  '301':'Excellence — it is trained, it is tracked, and every layer of the organization owns their piece of it.',
-  '401':'Culture — this is who you are. Members feel it, the team lives it, the Board leads it, unasked.'
-};
-const TOTAL = statements.length;
-
-/* ---------------------------------------------------------------------------
-   2. RENDER THE QUESTIONNAIRE
---------------------------------------------------------------------------- */
-const wrap = document.getElementById('statement-wrap');
-let lastSection = null;
-
-statements.forEach(function(item, idx){
-  if(item.section && item.section !== lastSection){
-    const header = document.createElement('div');
-    header.className = 'section-header';
-    header.textContent = item.section;
-    wrap.appendChild(header);
-    lastSection = item.section;
-  }
-  const div = document.createElement('div');
-  div.className = 'stmt';
-  div.dataset.index = idx;
-
-  const num = document.createElement('div');
-  num.className = 'stmt-num';
-  num.textContent = (idx+1) + '.';
-
-  const txt = document.createElement('div');
-  txt.className = 'stmt-text';
-  txt.textContent = item.text;
-  const key = document.createElement('span');
-  key.className = 'score-key';
-  key.textContent = 'Yes = ' + item.yes + '  |  No = ' + item.no;
-  txt.appendChild(key);
-
-  const choices = document.createElement('div');
-  choices.className = 'choices';
-  [['Yes', item.yes], ['No', item.no]].forEach(function(pair){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.textContent = pair[0];
-    b.dataset.level = pair[1];
-    b.dataset.answer = pair[0];
-    b.setAttribute('aria-label', pair[0] + ' — scores ' + pair[1]);
-    choices.appendChild(b);
-  });
-
-  div.appendChild(num);
-  div.appendChild(txt);
-  div.appendChild(choices);
-  wrap.appendChild(div);
+/* ---------------------------------------------------------------- club box */
+const sel = document.getElementById('club');
+CLUBS.forEach(function(name){
+  const o = document.createElement('option');
+  o.value = name; o.textContent = name;
+  sel.appendChild(o);
 });
 
-document.querySelectorAll('.choices').forEach(function(choiceGroup){
-  choiceGroup.querySelectorAll('button').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      choiceGroup.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-      choiceGroup.dataset.value = btn.dataset.level;
-      choiceGroup.dataset.answer = btn.dataset.answer;
-      choiceGroup.closest('.stmt').classList.add('answered');
-      updateProgress();
-      // A changed answer invalidates a score that is already on screen.
-      if(document.getElementById('results').classList.contains('show')){
-        lastResult = null;
-        setNote('Your answers changed — press "Calculate Our Score" again to refresh the result.', '');
-        document.getElementById('submit-btn').disabled = true;
-      }
-    });
-  });
+/* Remember the club between visits so a returning team lands straight on
+   their progress. Purely a convenience — the data itself lives in Firestore. */
+const REMEMBER = 'cgp-cf-club';
+try {
+  const saved = window.localStorage.getItem(REMEMBER);
+  if (saved && CLUBS.indexOf(saved) > -1) sel.value = saved;
+} catch (e) { /* storage may be blocked; not important */ }
+
+sel.addEventListener('change', function(){
+  try { window.localStorage.setItem(REMEMBER, sel.value); } catch (e) {}
+  render();
 });
 
-function countAnswered(){
-  let n = 0;
-  document.querySelectorAll('.choices').forEach(function(g){ if(g.dataset.value) n++; });
-  return n;
-}
+/* ------------------------------------------------------------------ render */
+async function render(){
+  const club = sel.value;
+  const pre = document.getElementById('pre-select');
+  const dash = document.getElementById('dash');
 
-function updateProgress(){
-  const n = countAnswered();
-  document.getElementById('progress').innerHTML = '<b>' + n + '</b> of ' + TOTAL + ' answered';
-}
-updateProgress();
-
-/* ---------------------------------------------------------------------------
-   3. SCORING
-   Range-scaled: the raw points are mapped onto the band between the worst and
-   best possible outcome for the exact questions that were answered, so
-   questions where Yes and No sit close together no longer inflate the result.
---------------------------------------------------------------------------- */
-let lastResult = null;
-
-function computeResult(){
-  const groups = document.querySelectorAll('.choices');
-  let earnedPoints = 0, minPoints = 0, maxPoints = 0, answered = 0;
-  const counts = {'101':0,'201':0,'301':0,'401':0};
-  const answers = [];
-
-  groups.forEach(function(g, idx){
-    const val = g.dataset.value;
-    if(!val) return;
-    const item = statements[idx];
-    const yesVal = levelValue[item.yes];
-    const noVal  = levelValue[item.no];
-    earnedPoints += levelValue[val];
-    minPoints    += Math.min(yesVal, noVal);
-    maxPoints    += Math.max(yesVal, noVal);
-    counts[val]++;
-    answered++;
-    answers.push({
-      index: idx + 1,
-      section: item.section,
-      text: item.text,
-      choice: g.dataset.answer,
-      level: val,
-      points: levelValue[val]
-    });
-  });
-
-  if(answered === 0) return null;
-
-  const range = maxPoints - minPoints;
-  const ratio = range > 0 ? (earnedPoints - minPoints) / range : 1;
-  const scaledValue = 1 + (ratio * 3);
-  const roundedValue = Math.round(scaledValue);
-  const levelKey = levels[Math.min(Math.max(roundedValue - 1, 0), 3)];
-
-  // per-section rollup, using the same range-scaling inside each section
-  const secMap = new Map();
-  answers.forEach(function(a){
-    if(!secMap.has(a.section)) secMap.set(a.section, {earned:0, min:0, max:0, n:0});
-    const s = secMap.get(a.section);
-    const item = statements[a.index - 1];
-    s.earned += a.points;
-    s.min += Math.min(levelValue[item.yes], levelValue[item.no]);
-    s.max += Math.max(levelValue[item.yes], levelValue[item.no]);
-    s.n++;
-  });
-  const sections = [];
-  secMap.forEach(function(s, name){
-    const r = (s.max - s.min) > 0 ? (s.earned - s.min) / (s.max - s.min) : 1;
-    const lv = levels[Math.min(Math.max(Math.round(1 + r*3) - 1, 0), 3)];
-    sections.push({ name: name, pct: Math.round(r*100), level: lv, answered: s.n });
-  });
-
-  /* ---- priorities: what to work on next -------------------------------
-     Built from the statements answered "No", ranked by leverage.
-
-     CF#1 is a ladder: 101 Awareness -> 201 Implementation -> 301 Excellence
-     -> 401 Culture. In a staged model the highest-leverage gap is the LOWEST
-     unmet rung, because it gates everything above it. So:
-
-       foundation = how early on the ladder the item sits
-                    (4 - levelValue[yes]) — a 101 item scores 3, a 401 scores 0
-       gain       = how many rungs a Yes would move this item
-                    (levelValue[yes] - levelValue[no])
-
-       score = foundation * 2 + gain
-
-     Foundation leads. Within the same rung, the item that moves the score
-     furthest comes first. Ties break toward the earlier question, which keeps
-     sections A-G in their intended sequence.
-
-     Why not rank by point gain alone: several statements score the same
-     either way (Yes = 101, No = 101), so they earn no points — yet they are
-     prerequisites. Ranking on points would tell a Club to run daily collateral
-     walk-throughs before it has designed an invitation to walk past.
-
-     To change the emphasis, edit the two multipliers on the score line below.
-  --------------------------------------------------------------------- */
-  const priorities = answers
-    .filter(function(a){ return a.choice === 'No'; })
-    .map(function(a){
-      const item = statements[a.index - 1];
-      const gain = levelValue[item.yes] - levelValue[item.no];
-      const foundation = 4 - levelValue[item.yes];
-      return {
-        index: a.index,
-        section: a.section,
-        action: item.action,
-        statement: item.text,
-        liftsTo: item.yes,
-        gain: gain,
-        score: foundation * 2 + gain
-      };
-    })
-    .sort(function(x, y){
-      if(y.score !== x.score) return y.score - x.score;
-      return x.index - y.index;
-    });
-
-  return {
-    club: document.getElementById('club').value.trim(),
-    takerName: document.getElementById('taker').value.trim(),
-    level: levelKey,
-    levelName: levelNames[levelKey],
-    pctOfRange: Math.round(ratio * 100),
-    scaledValue: Math.round(scaledValue * 100) / 100,
-    earnedPoints: earnedPoints,
-    minPoints: minPoints,
-    maxPoints: maxPoints,
-    answered: answered,
-    totalQuestions: TOTAL,
-    counts: counts,
-    sections: sections,
-    priorities: priorities,
-    answers: answers
-  };
-}
-
-/* ---------------------------------------------------------------------------
-   4. RENDER RESULTS (screen + printable report)
---------------------------------------------------------------------------- */
-function renderResult(r){
-  document.getElementById('result-level').textContent = 'Level ' + r.level + ' — ' + r.levelName;
-  document.getElementById('result-avg').textContent =
-    r.pctOfRange + '% of the range between the worst and best possible outcome (' +
-    r.earnedPoints + ' pts earned, range ' + r.minPoints + '–' + r.maxPoints + ', ' +
-    r.answered + ' of ' + r.totalQuestions + ' questions answered)';
-  document.getElementById('result-desc').textContent = levelDesc[r.level];
-  document.getElementById('result-who').textContent =
-    (r.club || 'Club not selected') + ' · ' + prettyDate();
-  document.getElementById('result-team').textContent =
-    r.takerName ? 'Participating team members: ' + oneLine(r.takerName) : '';
-
-  const distGrid = document.getElementById('dist-grid');
-  distGrid.innerHTML = '';
-  levels.forEach(function(lvl){
-    const c = r.counts[lvl];
-    const pct = r.answered > 0 ? Math.round((c/r.answered)*100) : 0;
-    const tile = document.createElement('div');
-    tile.className = 'dist-tile';
-    tile.innerHTML = '<div class="lv">Level ' + lvl + '</div><div class="count">' + c +
-                     '</div><div class="pct">' + pct + '% of answered questions</div>';
-    distGrid.appendChild(tile);
-  });
-
-  renderPriorities(r);
-
-  buildPrintReport(r);
-
-  document.getElementById('results').classList.add('show');
-}
-
-const MAX_PRIORITIES = 6;
-
-function renderPriorities(r){
-  const rows  = document.getElementById('pri-rows');
-  const lede  = document.getElementById('pri-lede');
-  const more  = document.getElementById('pri-more');
-  rows.innerHTML = '';
-  more.style.display = 'none';
-
-  const all = r.priorities || [];
-
-  if(all.length === 0){
-    lede.textContent = '';
-    const ok = document.createElement('p');
-    ok.className = 'pri-clear';
-    ok.textContent = 'Nothing flagged — you answered Yes to every question you completed. Hold the standard and re-run this assessment next quarter.';
-    rows.appendChild(ok);
+  if(!club){
+    pre.style.display = ''; dash.style.display = 'none';
     return;
   }
+  pre.style.display = 'none';
+  dash.style.display = '';
 
-  lede.textContent = all.length === 1
-    ? 'One gap surfaced. Start here.'
-    : 'Ranked by leverage — what moves your Club furthest, and what has to come first.';
+  const grid = document.getElementById('cf-grid');
+  grid.innerHTML = '<div style="color:#8f8a79;font-size:14px;padding:10px 0;">Loading your progress…</div>';
 
-  const shown = all.slice(0, MAX_PRIORITIES);
-  shown.forEach(function(p, i){
-    const row = document.createElement('div');
-    row.className = 'pri-row';
-
-    const rank = document.createElement('div');
-    rank.className = 'pri-rank';
-    rank.textContent = (i + 1) + '.';
-
-    const text = document.createElement('div');
-    text.className = 'pri-text';
-    text.textContent = p.action;
-    const q = document.createElement('span');
-    q.className = 'pri-q';
-    q.textContent = 'Question ' + p.index + ' · ' + p.section;
-    text.appendChild(q);
-
-    const tag = document.createElement('div');
-    tag.className = 'pri-tag' + (p.gain === 0 ? ' foundation' : '');
-    tag.textContent = p.gain === 0 ? 'Foundation' : 'Lifts to ' + p.liftsTo;
-
-    row.appendChild(rank); row.appendChild(text); row.appendChild(tag);
-    rows.appendChild(row);
-  });
-
-  if(all.length > shown.length){
-    const n = all.length - shown.length;
-    more.style.display = '';
-    more.textContent = 'Plus ' + n + ' further item' + (n === 1 ? '' : 's') +
-      ' answered No — every one is listed in the printable report below.';
+  let progress = { submissions: [], drafts: [] };
+  let loadError = '';
+  if(FIREBASE_ENABLED){
+    try { progress = await clubProgress(club); }
+    catch(err){ loadError = err && err.message ? err.message : String(err); }
   }
-}
 
-function buildPrintReport(r){
-  document.getElementById('pr-club').textContent  = r.club || '—';
-  document.getElementById('pr-taker').textContent = (r.takerName || '').trim() || '—';
-  document.getElementById('pr-date').textContent  = prettyDate();
-  document.getElementById('pr-answered').textContent = r.answered + ' of ' + r.totalQuestions;
-  document.getElementById('pr-level').textContent = 'Level ' + r.level + ' — ' + r.levelName;
-  document.getElementById('pr-detail').textContent =
-    r.pctOfRange + '% of the range between the worst and best possible outcome  ·  ' +
-    r.earnedPoints + ' points earned within a possible range of ' + r.minPoints + '–' + r.maxPoints +
-    '.  ' + levelDesc[r.level];
-  document.getElementById('pr-foot-right').textContent =
-    (r.club || 'Club') + ' · ' + prettyDate();
-
-  const pri = r.priorities || [];
-  let s;
-  if(pri.length === 0){
-    s = '<tr><td>Nothing flagged \u2014 every question answered returned Yes. ' +
-        'Hold the standard and re-run this assessment next quarter.</td></tr>';
-  }else{
-    s = '<tr><th></th><th>Priority</th><th>Question</th><th>Effect</th></tr>';
-    pri.forEach(function(p, i){
-      s += '<tr><td class="num">' + (i+1) + '</td><td>' + esc(p.action) +
-           '</td><td class="ans">' + p.index + '</td><td class="lvl">' +
-           (p.gain === 0 ? 'Base' : p.liftsTo) + '</td></tr>';
-    });
-  }
-  document.getElementById('pr-priorities').innerHTML = s;
-
-  let a = '<tr><th></th><th>Statement</th><th>Answer</th><th>Level</th></tr>';
-  let sec = null;
-  r.answers.forEach(function(ans){
-    if(ans.section !== sec){
-      a += '<tr class="pr-sec-row"><td colspan="4">' + esc(ans.section) + '</td></tr>';
-      sec = ans.section;
+  // newest submission per fundamental
+  const bestSub = new Map();
+  progress.submissions.forEach(function(s){
+    const id = Number(s.cfId || 1);
+    const cur = bestSub.get(id);
+    if(!cur || (s.__date && cur.__date && s.__date > cur.__date) || (s.__date && !cur.__date)){
+      bestSub.set(id, s);
     }
-    a += '<tr><td class="num">' + ans.index + '</td><td>' + esc(ans.text) +
-         '</td><td class="ans">' + ans.choice + '</td><td class="lvl">' + ans.level + '</td></tr>';
   });
-  document.getElementById('pr-all').innerHTML = a;
-}
+  const draftBy = new Map();
+  progress.drafts.forEach(function(d){ draftBy.set(Number(d.cfId), d); });
 
-function esc(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-/* Collapse a team-member list into one readable line for the summary strip.
-   Split on line breaks when the person used them, otherwise on commas — never
-   both, or "Jim Creighton, Enrollment Director" would be torn into two people. */
-function oneLine(v){
-  const t = String(v || '').trim();
-  if(!t) return '';
-  const parts = /\r?\n/.test(t) ? t.split(/\r?\n/) : t.split(',');
-  return parts.map(function(x){ return x.trim(); }).filter(Boolean).join(' · ');
-}
-function prettyDate(){
-  return new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
-}
-function setNote(msg, cls){
-  const n = document.getElementById('submit-note');
-  n.textContent = msg;
-  n.className = 'submit-note' + (cls ? ' ' + cls : '');
-}
+  let done = 0, prog = 0, none = 0, answeredTotal = 0;
+  grid.innerHTML = '';
 
-/* ---------------------------------------------------------------------------
-   5. BUTTON WIRING
---------------------------------------------------------------------------- */
-document.getElementById('calc-btn').addEventListener('click', function(){
-  const r = computeResult();
-  if(!r){
-    document.getElementById('bar-hint').textContent = 'Answer at least one question first.';
-    setTimeout(function(){ document.getElementById('bar-hint').textContent = ''; }, 3500);
-    return;
-  }
-  lastResult = r;
-  renderResult(r);
-  refreshSubmitState();
-  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
-});
+  FUNDAMENTALS.forEach(function(cf){
+    const sub = bestSub.get(cf.id);
+    const draft = draftBy.get(cf.id);
+    const draftAnswered = draft && draft.answers
+      ? Object.keys(draft.answers).filter(function(k){ return draft.answers[k]; }).length : 0;
 
-document.getElementById('print-btn').addEventListener('click', function(){
-  if(lastResult) buildPrintReport(lastResult);
-  window.print();
-});
-
-['club','taker'].forEach(function(id){
-  const el = document.getElementById(id);
-  ['input','change'].forEach(function(evt){ el.addEventListener(evt, function(){
-    if(lastResult){
-      lastResult.club = document.getElementById('club').value.trim();
-      lastResult.takerName = document.getElementById('taker').value.trim();
-      document.getElementById('result-who').textContent =
-        (lastResult.club || 'Club not selected') + ' · ' + prettyDate();
-      document.getElementById('result-team').textContent =
-        lastResult.takerName ? 'Participating team members: ' + oneLine(lastResult.takerName) : '';
-      buildPrintReport(lastResult);
+    let state, stateText, pct, answered;
+    if(sub){
+      state = 'done'; answered = Number(sub.answered || cf.count); pct = 100;
+      stateText = 'Submitted ' + (sub.__date ? relativeTime(sub.__date) : 'previously');
+      done++;
+    } else if(draftAnswered > 0){
+      state = 'progress'; answered = draftAnswered;
+      pct = Math.round(answered / cf.count * 100);
+      stateText = '<b>' + answered + ' of ' + cf.count + '</b> answered · saved '
+                + (draft.__date ? relativeTime(draft.__date) : 'recently');
+      prog++;
+    } else {
+      state = 'none'; answered = 0; pct = 0;
+      stateText = 'Not started';
+      none++;
     }
-    refreshSubmitState();
-  }); });
-});
+    answeredTotal += answered;
 
-function refreshSubmitState(){
-  const btn = document.getElementById('submit-btn');
-  if(submitted){ return; }
-  const club  = document.getElementById('club').value.trim();
-  const taker = document.getElementById('taker').value.trim();
-  const n = countAnswered();
-  const missing = [];
-  if(!club)  missing.push('your Club from the list');
-  if(!taker) missing.push('the participating team members');
-  if(n < TOTAL) missing.push((TOTAL - n) + ' unanswered question' + ((TOTAL - n) === 1 ? '' : 's'));
+    const card = document.createElement('div');
+    card.className = 'cf-card state-' + state;
 
-  if(!lastResult){
-    btn.disabled = true;
-    return;
+    let actions = '<a class="btn btn-outline btn-sm" href="assessment.html?cf=' + cf.id + '">'
+                + (state === 'none' ? 'Begin' : state === 'progress' ? 'Resume' : 'Review or re-run')
+                + '</a>';
+    if(sub && sub.level){
+      actions += '<span class="pill pill-' + esc(sub.level) + '">' + esc(sub.level) + ' '
+               + esc(LEVEL_NAMES[sub.level] || '') + '</span>';
+    }
+
+    card.innerHTML =
+      '<div class="cf-top">' +
+        '<span class="cf-num">CF#' + cf.id + '</span>' +
+        '<span class="cf-count">' + cf.count + ' question' + (cf.count === 1 ? '' : 's') + '</span>' +
+      '</div>' +
+      '<h3>' + esc(cf.headline) + '</h3>' +
+      '<div class="cf-meter"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="cf-state">' + stateText + '</div>' +
+      '<div class="cf-actions">' + actions + '</div>';
+    grid.appendChild(card);
+  });
+
+  document.getElementById('s-done').textContent = done;
+  document.getElementById('s-prog').textContent = prog;
+  document.getElementById('s-none').textContent = none;
+  document.getElementById('s-qs').textContent = answeredTotal + ' / 233';
+
+  if(loadError){
+    const warn = document.createElement('p');
+    warn.style.cssText = 'color:#e08a7c;font-size:13px;line-height:1.6;margin:18px 0 0;';
+    warn.textContent = 'Could not load saved progress: ' + loadError +
+      ' — the assessments still work, but resuming may not.';
+    grid.parentNode.appendChild(warn);
   }
-  if(missing.length){
-    btn.disabled = true;
-    setNote('To submit, complete: ' + missing.join(', ') + '. You can still print or save a PDF right now.', '');
-  } else {
-    btn.disabled = false;
-    setNote(FIREBASE_ENABLED
-      ? 'Ready to submit. Your results will be sent to the Century Golf membership team.'
-      : 'Firebase is not connected yet, so Submit is in preview mode — printing works normally.', '');
-  }
-}
-
-/* ---------------------------------------------------------------------------
-   6. FIREBASE — anonymous auth for takers, single write on submit
---------------------------------------------------------------------------- */
-let db = null, auth = null, submitted = false;
-
-async function initFirebase(){
-  if(!FIREBASE_ENABLED) return;
-  try{
-    const [{ initializeApp }, { getAuth, signInAnonymously }, fs] = await Promise.all([
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
-    ]);
-    const app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = fs.getFirestore(app);
-    window.__fs = fs;
-    await signInAnonymously(auth);
-  }catch(err){
-    console.error('Firebase init failed:', err);
-    db = null;
-  }
-}
-initFirebase();
-
-document.getElementById('submit-btn').addEventListener('click', async function(){
-  const btn = this;
-  if(!lastResult) return;
-
   if(!FIREBASE_ENABLED){
-    setNote('Preview mode — Firebase is not connected yet, so nothing was sent. Paste your config into firebase-config.js and set FIREBASE_ENABLED to true.', 'err');
-    return;
+    const warn = document.createElement('p');
+    warn.style.cssText = 'color:#8f8a79;font-size:13px;line-height:1.6;margin:18px 0 0;text-align:center;';
+    warn.textContent = 'Firebase is not connected, so progress is not being saved. ' +
+      'The assessments still score and print normally.';
+    grid.parentNode.appendChild(warn);
   }
-  if(!db){
-    setNote('Could not reach the database. Check your connection and try again — your answers are still on screen, and you can print a PDF now.', 'err');
-    return;
-  }
+}
 
-  btn.disabled = true;
-  setNote('Submitting…', '');
-  try{
-    const fs = window.__fs;
-    const payload = {
-      club: lastResult.club,
-      takerName: lastResult.takerName,
-      coreFundamental: 'CF1 — Friends Inviting Friends',
-      level: lastResult.level,
-      levelName: lastResult.levelName,
-      pctOfRange: lastResult.pctOfRange,
-      scaledValue: lastResult.scaledValue,
-      earnedPoints: lastResult.earnedPoints,
-      minPoints: lastResult.minPoints,
-      maxPoints: lastResult.maxPoints,
-      answered: lastResult.answered,
-      totalQuestions: lastResult.totalQuestions,
-      counts: lastResult.counts,
-      sections: lastResult.sections,
-      priorities: lastResult.priorities,
-      answers: lastResult.answers,
-      submittedAt: fs.serverTimestamp(),
-      userAgent: navigator.userAgent,
-      uid: auth && auth.currentUser ? auth.currentUser.uid : null
-    };
-    await fs.addDoc(fs.collection(db, SUBMISSIONS_COLLECTION), payload);
-    submitted = true;
-    btn.textContent = 'Submitted ✓';
-    setNote('Thank you — your assessment has been recorded. Print or save your PDF below for your own records.', 'ok');
-  }catch(err){
-    console.error(err);
-    btn.disabled = false;
-    setNote('Submission failed: ' + (err && err.message ? err.message : 'unknown error') +
-            '. Your answers are intact — you can retry, or print a PDF and send it manually.', 'err');
-  }
-});
-
-refreshSubmitState();
+render();
 </script>
 
 </body>

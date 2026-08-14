@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Assessment | Century Golf Partners</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23122019'/><text x='32' y='43' font-family='Georgia,serif' font-size='26' letter-spacing='1' fill='%23b8922f' text-anchor='middle'>CG</text></svg>">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  /* =====================================================================
+     PRINT / SAVE-AS-PDF
+     The whole screen is hidden and #print-report is shown instead.
+     ===================================================================== */
+  #print-report{ display:none; }
+
+  @media print{
+    @page{ margin:0.6in 0.65in; }
+    body{ background:#fff !important; color:#000; padding:0; font-size:10.5pt; }
+    .topnav, .masthead, .identity, .wrap, .compute-bar, .results, .action-row{
+      display:none !important;
+    }
+    #print-report{ display:block !important; }
+
+    .pr-head{ border-bottom:2.5px solid #1f3a2e; padding-bottom:10px; margin-bottom:16px; }
+    .pr-head .pr-org{
+      font-size:8.5pt; letter-spacing:0.24em; text-transform:uppercase;
+      color:#b8922f; margin-bottom:5px;
+    }
+    .pr-head h1{
+      font-size:15pt; margin:0 0 4px; font-weight:600; color:#1f3a2e; line-height:1.3;
+    }
+    .pr-head .pr-sub{ font-size:9.5pt; color:#555; }
+
+    .pr-meta{ display:flex; gap:26px; flex-wrap:wrap; font-size:10pt; margin-bottom:14px; }
+    .pr-meta div span{
+      display:block; font-size:7.5pt; letter-spacing:0.14em; text-transform:uppercase;
+      color:#888; margin-bottom:2px;
+    }
+    .pr-meta div b{ font-weight:600; }
+
+    .pr-team{
+      font-size:10pt; margin-bottom:16px; padding-bottom:10px;
+      border-bottom:1px solid #e8e2d0;
+    }
+    .pr-team span{
+      display:block; font-size:7.5pt; letter-spacing:0.14em; text-transform:uppercase;
+      color:#888; margin-bottom:3px;
+    }
+    .pr-team b{ font-weight:600; line-height:1.5; white-space:pre-line; }
+
+    .pr-score{
+      border:1.5px solid #b8922f; background:#faf7ee !important;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      padding:14px 18px; margin-bottom:16px; text-align:center;
+    }
+    .pr-score .pr-lv{ font-size:19pt; color:#1f3a2e; font-weight:600; margin-bottom:4px; }
+    .pr-score .pr-detail{ font-size:9.5pt; color:#444; line-height:1.5; }
+
+    .pr-h2{
+      font-size:8.5pt; letter-spacing:0.2em; text-transform:uppercase; color:#b8922f;
+      font-weight:700; border-bottom:1px solid #d9d0b8; padding-bottom:4px; margin:0 0 8px;
+    }
+    .pr-block{ margin-bottom:16px; }
+
+    table.pr-table{ width:100%; border-collapse:collapse; font-size:9.5pt; }
+    table.pr-table th{
+      text-align:left; font-size:7.5pt; letter-spacing:0.12em; text-transform:uppercase;
+      color:#888; border-bottom:1px solid #d9d0b8; padding:4px 6px; font-weight:600;
+    }
+    table.pr-table td{ padding:4px 6px; border-bottom:0.5px solid #e8e2d0; vertical-align:top; }
+    table.pr-table td.num{ width:24px; color:#b8922f; font-weight:600; }
+    table.pr-table td.ans{ width:44px; text-align:center; font-weight:600; }
+    table.pr-table td.lvl{ width:52px; text-align:center; color:#1f3a2e; font-weight:600; }
+    table.pr-table tr{ page-break-inside:avoid; }
+    .pr-sec-row td{
+      background:#f2eede !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      font-weight:700; font-size:9pt; color:#1f3a2e; padding-top:6px; padding-bottom:6px;
+    }
+    .pr-foot{
+      margin-top:18px; padding-top:8px; border-top:1px solid #d9d0b8;
+      font-size:8pt; color:#999; display:flex; justify-content:space-between;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html">← All Fundamentals</a>
+  <a href="admin.html">Results</a>
+</nav>
+
+<div class="masthead">
+  <div class="eyebrow" id="cf-eyebrow">Core Fundamental — Self-Assessment</div>
+  <h1 id="cf-headline">Loading…</h1>
+  <p id="cf-intro"></p>
+  <p style="margin-top:14px;">This is not a checklist — it's a self-reflection. For each
+     statement, honestly choose the answer that describes where your Club stands today.
+     101 (Awareness), 201 (Implementation), 301 (Excellence), 401 (Culture).</p>
+</div>
+
+<div class="identity">
+  <div class="identity-card">
+    <div class="field">
+      <label for="club">Club <span class="req">*</span></label>
+      <select id="club"><option value="">Select your Club…</option></select>
+    </div>
+    <div class="field">
+      <label for="taker">Participating Team Members <span class="req">*</span></label>
+      <textarea id="taker" rows="2"
+        placeholder="Everyone who worked on this assessment — one per line, or separated by commas"></textarea>
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="statement-wrap" style="padding-top:30px;"></div>
+
+<div class="compute-bar">
+  <div class="save-state" id="save-state"></div>
+  <button class="compute-btn" id="calc-btn">Calculate Our Score</button>
+  <div class="progress" id="progress"><b>0</b> of 0 answered</div>
+</div>
+
+<div class="results" id="results">
+  <div class="result-summary">
+    <div class="eyebrow">Assessment Result</div>
+    <h3 id="result-level">—</h3>
+    <p id="result-avg"></p>
+    <p id="result-desc"></p>
+    <div class="who" id="result-who"></div>
+    <div class="team" id="result-team"></div>
+  </div>
+
+  <div class="dist-grid" id="dist-grid"></div>
+
+  <div class="priorities">
+    <h4>What to work on next</h4>
+    <p class="pri-lede" id="pri-lede"></p>
+    <div id="pri-rows"></div>
+    <p class="pri-more" id="pri-more" style="display:none;"></p>
+  </div>
+
+  <div class="action-row">
+    <button class="btn btn-primary" id="submit-btn">Submit to Century Golf</button>
+    <button class="btn btn-ghost" id="print-btn">Print / Save as PDF</button>
+    <a class="btn btn-ghost" href="index.html">Back to all ten</a>
+  </div>
+  <p class="submit-note" id="submit-note"></p>
+</div>
+
+<!-- ======================= printable report ======================= -->
+<div id="print-report">
+  <div class="pr-head">
+    <div class="pr-org">Century Golf Partners &nbsp;·&nbsp; Membership Core Fundamentals</div>
+    <h1 id="pr-title">Core Fundamental</h1>
+    <div class="pr-sub">Club Self-Assessment Results</div>
+  </div>
+
+  <div class="pr-meta">
+    <div><span>Club</span><b id="pr-club">—</b></div>
+    <div><span>Date</span><b id="pr-date">—</b></div>
+    <div><span>Questions answered</span><b id="pr-answered">—</b></div>
+  </div>
+
+  <div class="pr-team">
+    <span>Participating team members</span>
+    <b id="pr-taker">—</b>
+  </div>
+
+  <div class="pr-score">
+    <div class="pr-lv" id="pr-level">—</div>
+    <div class="pr-detail" id="pr-detail"></div>
+  </div>
+
+  <div class="pr-block">
+    <div class="pr-h2">What to work on next</div>
+    <table class="pr-table" id="pr-priorities"></table>
+  </div>
+
+  <div class="pr-block">
+    <div class="pr-h2">Every answer</div>
+    <table class="pr-table" id="pr-all"></table>
+  </div>
+
+  <div class="pr-foot">
+    <span>Century Golf Partners — Membership Core Fundamentals</span>
+    <span id="pr-foot-right"></span>
+  </div>
+</div>
+
+<script type="module">
+import { CLUBS, FUNDAMENTALS } from './data/manifest.js';
+import {
+  LEVELS, LEVEL_NAMES, LEVEL_DESC, scoreAssessment,
+  esc, oneLine, prettyDate, relativeTime,
+  loadDraft, saveDraft, submitAssessment
+} from './shared.js';
+import { FIREBASE_ENABLED } from './firebase-config.js';
+
+/* ------------------------------------------------------- which fundamental */
+const params = new URLSearchParams(location.search);
+let cfId = parseInt(params.get('cf') || '1', 10);
+if(!FUNDAMENTALS.some(function(f){ return f.id === cfId; })) cfId = 1;
+
+let CF = null, statements = [], TOTAL = 0;
+const answers = {};          // index -> 'Yes' | 'No'
+let lastResult = null, submitted = false, loadedDraft = null;
+
+/* ------------------------------------------------------------- club select */
+const clubSel = document.getElementById('club');
+CLUBS.forEach(function(name){
+  const o = document.createElement('option');
+  o.value = name; o.textContent = name;
+  clubSel.appendChild(o);
+});
+const REMEMBER = 'cgp-cf-club';
+try {
+  const saved = window.localStorage.getItem(REMEMBER);
+  if(saved && CLUBS.indexOf(saved) > -1) clubSel.value = saved;
+} catch(e) {}
+
+/* ------------------------------------------------------------------- boot */
+(async function boot(){
+  const mod = await import('./data/cf' + cfId + '.js');
+  CF = mod.default;
+  statements = CF.statements;
+  TOTAL = statements.length;
+
+  document.title = CF.number + ' — Self-Assessment | Century Golf Partners';
+  document.getElementById('cf-eyebrow').textContent =
+    'Core Fundamental No. ' + cfId + ' — Self-Assessment';
+  document.getElementById('cf-headline').textContent = CF.headline;
+  document.getElementById('cf-intro').textContent = CF.intro || '';
+  document.getElementById('pr-title').textContent =
+    'Core Fundamental No. ' + cfId + ' — ' + CF.headline;
+
+  renderStatements();
+  updateProgress();
+  if(clubSel.value) await tryResume();
+  refreshSubmitState();
+})();
+
+/* -------------------------------------------------------------- statements */
+function renderStatements(){
+  const wrap = document.getElementById('statement-wrap');
+  wrap.innerHTML = '';
+  let lastSection = null;
+
+  statements.forEach(function(item, idx){
+    if(item.section && item.section !== lastSection){
+      const h = document.createElement('div');
+      h.className = 'section-header';
+      h.textContent = item.section;
+      wrap.appendChild(h);
+      lastSection = item.section;
+    }
+    const div = document.createElement('div');
+    div.className = 'stmt';
+    div.dataset.index = idx;
+
+    const num = document.createElement('div');
+    num.className = 'stmt-num';
+    num.textContent = (idx + 1) + '.';
+
+    const txt = document.createElement('div');
+    txt.className = 'stmt-text';
+    txt.textContent = item.text;
+    const key = document.createElement('span');
+    key.className = 'score-key';
+    key.textContent = 'Yes = ' + item.yes + '  |  No = ' + item.no;
+    txt.appendChild(key);
+
+    const choices = document.createElement('div');
+    choices.className = 'choices';
+    ['Yes','No'].forEach(function(label){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = label;
+      b.dataset.answer = label;
+      b.setAttribute('aria-label', label + ' — scores ' +
+        (label === 'Yes' ? item.yes : item.no));
+      b.addEventListener('click', function(){
+        choices.querySelectorAll('button').forEach(function(x){ x.classList.remove('active'); });
+        b.classList.add('active');
+        answers[idx] = label;
+        div.classList.add('answered');
+        updateProgress();
+        queueSave();
+        if(document.getElementById('results').classList.contains('show')){
+          lastResult = null;
+          setNote('Your answers changed — press "Calculate Our Score" again to refresh the result.', '');
+          document.getElementById('submit-btn').disabled = true;
+        }
+      });
+      choices.appendChild(b);
+    });
+
+    div.appendChild(num); div.appendChild(txt); div.appendChild(choices);
+    wrap.appendChild(div);
+  });
+}
+
+function paintAnswers(){
+  document.querySelectorAll('.stmt').forEach(function(div){
+    const idx = Number(div.dataset.index);
+    const val = answers[idx];
+    div.querySelectorAll('.choices button').forEach(function(b){
+      b.classList.toggle('active', !!val && b.dataset.answer === val);
+    });
+    div.classList.toggle('answered', !!val);
+  });
+}
+
+function countAnswered(){ return Object.keys(answers).filter(function(k){ return answers[k]; }).length; }
+
+function updateProgress(){
+  document.getElementById('progress').innerHTML =
+    '<b>' + countAnswered() + '</b> of ' + TOTAL + ' answered';
+}
+
+/* ------------------------------------------------------- draft save/resume */
+let saveTimer = null, saving = false, dirty = false;
+
+function setSaveState(text, cls){
+  const el = document.getElementById('save-state');
+  el.textContent = text;
+  el.className = 'save-state' + (cls ? ' ' + cls : '');
+}
+
+function queueSave(){
+  if(!FIREBASE_ENABLED) return;
+  if(!clubSel.value){
+    setSaveState('Select your Club to start saving', '');
+    return;
+  }
+  dirty = true;
+  setSaveState('Saving…', 'saving');
+  clearTimeout(saveTimer);
+  // Debounced: one write a second or two after the last click, not per tap.
+  saveTimer = setTimeout(flushSave, 1500);
+}
+
+async function flushSave(){
+  if(!FIREBASE_ENABLED || !clubSel.value || saving || !dirty) return;
+  saving = true;
+  try{
+    await saveDraft(clubSel.value, cfId, {
+      answers: answers,
+      teamMembers: document.getElementById('taker').value,
+      answered: countAnswered(),
+      totalQuestions: TOTAL
+    });
+    dirty = false;
+    setSaveState('All work saved · just now', 'saved');
+  }catch(err){
+    console.error(err);
+    setSaveState('Could not save — check your connection', 'error');
+  }finally{
+    saving = false;
+  }
+}
+
+// Best-effort flush if they navigate away mid-debounce.
+window.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'hidden' && dirty){ clearTimeout(saveTimer); flushSave(); }
+});
+
+async function tryResume(){
+  if(!FIREBASE_ENABLED) { setSaveState('Progress saving is off', ''); return; }
+  setSaveState('Checking for saved work…', 'saving');
+  try{
+    const d = await loadDraft(clubSel.value, cfId);
+    loadedDraft = d;
+    if(d && d.answers && Object.keys(d.answers).length){
+      Object.keys(d.answers).forEach(function(k){
+        const i = Number(k);
+        if(i >= 0 && i < TOTAL && (d.answers[k] === 'Yes' || d.answers[k] === 'No')){
+          answers[i] = d.answers[k];
+        }
+      });
+      if(d.teamMembers && !document.getElementById('taker').value){
+        document.getElementById('taker').value = d.teamMembers;
+      }
+      paintAnswers();
+      updateProgress();
+      const when = d.__date ? relativeTime(d.__date) : 'earlier';
+      setSaveState('Resumed work saved ' + when, 'saved');
+    } else {
+      setSaveState('No saved work yet for this Club', '');
+    }
+  }catch(err){
+    console.error(err);
+    setSaveState('Could not load saved work', 'error');
+  }
+}
+
+clubSel.addEventListener('change', async function(){
+  try { window.localStorage.setItem(REMEMBER, clubSel.value); } catch(e) {}
+  // switching club means a different draft: clear and reload
+  Object.keys(answers).forEach(function(k){ delete answers[k]; });
+  paintAnswers(); updateProgress();
+  lastResult = null;
+  document.getElementById('results').classList.remove('show');
+  if(clubSel.value) await tryResume();
+  refreshSubmitState();
+});
+
+document.getElementById('taker').addEventListener('input', function(){
+  queueSave();
+  if(lastResult){ renderResult(lastResult); }
+  refreshSubmitState();
+});
+
+/* ------------------------------------------------------------------ result */
+document.getElementById('calc-btn').addEventListener('click', function(){
+  const r = scoreAssessment(statements, answers);
+  if(!r){
+    setNote('Answer at least one question first.', 'err');
+    return;
+  }
+  r.club = clubSel.value;
+  r.takerName = document.getElementById('taker').value.trim();
+  r.cfId = cfId;
+  r.cfHeadline = CF.headline;
+  lastResult = r;
+  renderResult(r);
+  refreshSubmitState();
+  document.getElementById('results').scrollIntoView({behavior:'smooth', block:'start'});
+});
+
+function renderResult(r){
+  document.getElementById('result-level').textContent = 'Level ' + r.level + ' — ' + r.levelName;
+  document.getElementById('result-avg').textContent =
+    r.pctOfRange + '% of the range between the worst and best possible outcome (' +
+    r.earnedPoints + ' pts earned, range ' + r.minPoints + '–' + r.maxPoints + ', ' +
+    r.answered + ' of ' + r.totalQuestions + ' questions answered)';
+  document.getElementById('result-desc').textContent = LEVEL_DESC[r.level];
+  document.getElementById('result-who').textContent =
+    (r.club || 'Club not selected') + ' · CF#' + r.cfId + ' · ' + prettyDate();
+  document.getElementById('result-team').textContent =
+    r.takerName ? 'Participating team members: ' + oneLine(r.takerName) : '';
+
+  const dist = document.getElementById('dist-grid');
+  dist.innerHTML = '';
+  LEVELS.forEach(function(lvl){
+    const c = r.counts[lvl];
+    const pct = r.answered > 0 ? Math.round(c / r.answered * 100) : 0;
+    const tile = document.createElement('div');
+    tile.className = 'dist-tile';
+    tile.innerHTML = '<div class="lv">Level ' + lvl + '</div><div class="count">' + c +
+                     '</div><div class="pct">' + pct + '% of answered questions</div>';
+    dist.appendChild(tile);
+  });
+
+  renderPriorities(r);
+  buildPrintReport(r);
+  document.getElementById('results').classList.add('show');
+}
+
+const MAX_PRIORITIES = 6;
+
+function renderPriorities(r){
+  const rows = document.getElementById('pri-rows');
+  const lede = document.getElementById('pri-lede');
+  const more = document.getElementById('pri-more');
+  rows.innerHTML = '';
+  more.style.display = 'none';
+
+  const all = r.priorities || [];
+  if(all.length === 0){
+    lede.textContent = '';
+    const ok = document.createElement('p');
+    ok.className = 'pri-clear';
+    ok.textContent = 'Nothing flagged — you answered Yes to every question you completed. ' +
+                     'Hold the standard and re-run this assessment next quarter.';
+    rows.appendChild(ok);
+    return;
+  }
+
+  const anyCustom = all.some(function(p){ return p.hasCustomAction; });
+  lede.textContent = all.length === 1
+    ? 'One gap surfaced. Start here.'
+    : anyCustom
+      ? 'Ranked by leverage — what moves your Club furthest, and what has to come first.'
+      : 'Ranked by leverage — the lowest rungs first, because they gate everything above. Make each of these true.';
+
+  all.slice(0, MAX_PRIORITIES).forEach(function(p, i){
+    const row = document.createElement('div');
+    row.className = 'pri-row';
+
+    const rank = document.createElement('div');
+    rank.className = 'pri-rank';
+    rank.textContent = (i + 1) + '.';
+
+    const text = document.createElement('div');
+    text.className = 'pri-text';
+    text.textContent = p.action;
+    const q = document.createElement('span');
+    q.className = 'pri-q';
+    q.textContent = 'Question ' + p.index + ' · ' + p.section;
+    text.appendChild(q);
+
+    const tag = document.createElement('div');
+    tag.className = 'pri-tag' + (p.gain === 0 ? ' foundation' : '');
+    tag.textContent = p.gain === 0 ? 'Foundation' : 'Lifts to ' + p.liftsTo;
+
+    row.appendChild(rank); row.appendChild(text); row.appendChild(tag);
+    rows.appendChild(row);
+  });
+
+  if(all.length > MAX_PRIORITIES){
+    const n = all.length - MAX_PRIORITIES;
+    more.style.display = '';
+    more.textContent = 'Plus ' + n + ' further item' + (n === 1 ? '' : 's') +
+      ' answered No — every one is listed in the printable report below.';
+  }
+}
+
+function buildPrintReport(r){
+  document.getElementById('pr-club').textContent = r.club || '—';
+  document.getElementById('pr-taker').textContent = (r.takerName || '').trim() || '—';
+  document.getElementById('pr-date').textContent = prettyDate();
+  document.getElementById('pr-answered').textContent = r.answered + ' of ' + r.totalQuestions;
+  document.getElementById('pr-level').textContent = 'Level ' + r.level + ' — ' + r.levelName;
+  document.getElementById('pr-detail').textContent =
+    r.pctOfRange + '% of the range between the worst and best possible outcome  ·  ' +
+    r.earnedPoints + ' points earned within a possible range of ' + r.minPoints + '–' +
+    r.maxPoints + '.  ' + LEVEL_DESC[r.level];
+  document.getElementById('pr-foot-right').textContent =
+    (r.club || 'Club') + ' · CF#' + r.cfId + ' · ' + prettyDate();
+
+  const pri = r.priorities || [];
+  let s;
+  if(pri.length === 0){
+    s = '<tr><td>Nothing flagged — every question answered returned Yes. ' +
+        'Hold the standard and re-run this assessment next quarter.</td></tr>';
+  }else{
+    s = '<tr><th></th><th>Priority</th><th>Question</th><th>Effect</th></tr>';
+    pri.forEach(function(p, i){
+      s += '<tr><td class="num">' + (i+1) + '</td><td>' + esc(p.action) +
+           '</td><td class="ans">' + p.index + '</td><td class="lvl">' +
+           (p.gain === 0 ? 'Base' : p.liftsTo) + '</td></tr>';
+    });
+  }
+  document.getElementById('pr-priorities').innerHTML = s;
+
+  let a = '<tr><th></th><th>Statement</th><th>Answer</th><th>Level</th></tr>';
+  let sec = null;
+  r.answers.forEach(function(ans){
+    if(ans.section !== sec){
+      a += '<tr class="pr-sec-row"><td colspan="4">' + esc(ans.section) + '</td></tr>';
+      sec = ans.section;
+    }
+    a += '<tr><td class="num">' + ans.index + '</td><td>' + esc(ans.text) +
+         '</td><td class="ans">' + ans.choice + '</td><td class="lvl">' + ans.level + '</td></tr>';
+  });
+  document.getElementById('pr-all').innerHTML = a;
+}
+
+/* ------------------------------------------------------------ submit gate */
+function setNote(msg, cls){
+  const n = document.getElementById('submit-note');
+  n.textContent = msg;
+  n.className = 'submit-note' + (cls ? ' ' + cls : '');
+}
+
+function refreshSubmitState(){
+  const btn = document.getElementById('submit-btn');
+  if(submitted) return;
+  const club = clubSel.value;
+  const taker = document.getElementById('taker').value.trim();
+  const n = countAnswered();
+  const missing = [];
+  if(!club) missing.push('your Club from the list');
+  if(!taker) missing.push('the participating team members');
+  if(n < TOTAL) missing.push((TOTAL - n) + ' unanswered question' + ((TOTAL - n) === 1 ? '' : 's'));
+
+  if(!lastResult){ btn.disabled = true; return; }
+  if(missing.length){
+    btn.disabled = true;
+    setNote('To submit, complete: ' + missing.join(', ') +
+            '. You can still print or save a PDF right now.', '');
+  }else{
+    btn.disabled = false;
+    setNote(FIREBASE_ENABLED
+      ? 'Ready to submit. Your results will be sent to the Century Golf membership team.'
+      : 'Firebase is not connected, so Submit is in preview mode — printing works normally.', '');
+  }
+}
+
+document.getElementById('print-btn').addEventListener('click', function(){
+  if(lastResult) buildPrintReport(lastResult);
+  window.print();
+});
+
+document.getElementById('submit-btn').addEventListener('click', async function(){
+  const btn = this;
+  if(!lastResult) return;
+  if(!FIREBASE_ENABLED){
+    setNote('Preview mode — Firebase is not connected, so nothing was sent.', 'err');
+    return;
+  }
+  btn.disabled = true;
+  setNote('Submitting…', '');
+  try{
+    clearTimeout(saveTimer);
+    await flushSave();
+    await submitAssessment({
+      club: lastResult.club,
+      takerName: lastResult.takerName,
+      cfId: cfId,
+      cfHeadline: CF.headline,
+      coreFundamental: 'CF#' + cfId + ' — ' + CF.headline,
+      level: lastResult.level,
+      levelName: lastResult.levelName,
+      pctOfRange: lastResult.pctOfRange,
+      scaledValue: lastResult.scaledValue,
+      earnedPoints: lastResult.earnedPoints,
+      minPoints: lastResult.minPoints,
+      maxPoints: lastResult.maxPoints,
+      answered: lastResult.answered,
+      totalQuestions: lastResult.totalQuestions,
+      counts: lastResult.counts,
+      sections: lastResult.sections,
+      priorities: lastResult.priorities,
+      answers: lastResult.answers
+    });
+    submitted = true;
+    btn.textContent = 'Submitted ✓';
+    setNote('Thank you — your assessment has been recorded. Print or save your PDF for ' +
+            'your own records, then head back to the other fundamentals.', 'ok');
+  }catch(err){
+    console.error(err);
+    btn.disabled = false;
+    setNote('Submission failed: ' + (err && err.message ? err.message : 'unknown error') +
+            '. Your answers are still saved — you can retry, or print a PDF and send it manually.', 'err');
+  }
+});
+</script>
+
+</body>
+</html>

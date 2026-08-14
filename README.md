@@ -1,272 +1,229 @@
-# Century Golf Partners — Core Fundamentals Self-Assessment
+# Century Golf Partners — Membership Core Fundamentals
 
-A two-page static site. Clubs take the CF#1 "Friends Inviting Friends"
-self-assessment, see their score immediately, print or save a PDF of their
-results, and submit them to a Firebase back end. Results are reviewed on a
-PIN-gated dashboard.
+Ten club self-assessments on one site. A club picks itself once, works through
+the fundamentals in any order, and their answers save as they go — so a team can
+stop mid-assessment and pick up days later from a different computer.
+
+Roughly 233 questions across the ten, about two and a half hours of answering in
+total. That is why saving matters.
 
 ```
-index.html          the assessment (public)
-admin.html          results dashboard (login required)
-firebase-config.js  your Firebase keys — the one file you must edit
-firestore.rules     security rules to paste into the Firebase console
+index.html          Hub — pick your Club, see progress across all ten
+assessment.html     The assessment engine — ?cf=1 … ?cf=10
+admin.html          Results dashboard (PIN)
+shared.js           Scoring, priorities, Firebase, draft save/resume
+firebase-config.js  Your Firebase keys — the one file with settings in it
+firestore.rules     Security rules, pasted into the Firebase console
+assets/site.css     All styling, one file
+data/manifest.js    The ten fundamentals + the club list
+data/cf1.js … cf10.js   The questions
 ```
 
-No build step, no npm, no server. It is plain HTML that runs anywhere.
+No build step, no npm, no server. Plain HTML that runs anywhere.
 
 ---
 
-## Part 1 — Firebase setup (about 15 minutes, once)
+## The shape of it
 
-### 1. Create the project
+There is **one engine and ten data files**. `assessment.html?cf=7` loads
+`data/cf7.js` and renders it. Scoring, the priorities list, the printable
+report, saving and submitting are identical for every fundamental because
+they are literally the same code.
 
-1. Go to <https://console.firebase.google.com> and click **Add project**.
-2. Name it something like `century-golf-core-fundamentals`.
-3. Google Analytics is optional — you don't need it. Skip it.
+This is why it is one site rather than ten. A change to the print layout, the
+club list, or the scoring lands everywhere at once instead of needing ten
+edits that inevitably drift apart.
 
-### 2. Create the database
-
-1. Left sidebar → **Build → Firestore Database** → **Create database**.
-2. Choose **Start in production mode**. (Test mode leaves your data wide open
-   for 30 days. You're pasting real rules in step 5, so you don't need it.)
-3. Pick the location closest to your clubs — `nam5 (United States)` is fine.
-
-### 3. Turn on the two sign-in methods
-
-Left sidebar → **Build → Authentication** → **Get started**, then on the
-**Sign-in method** tab enable both:
-
-| Provider | Why |
-|---|---|
-| **Anonymous** | Lets a club submit without creating an account. Zero friction — they never see a login screen. This is the only provider the site needs today. |
-| **Email/Password** | Not used by the current PIN-based dashboard. Leave it enabled — you'll want it if you ever follow "Making results private again". |
-
-### 4. Register the web app and copy your config
-
-1. Click the **gear icon → Project settings**.
-2. Scroll to **Your apps** → click the web icon **`</>`**.
-3. Nickname it `core-fundamentals-site`. **Do not** check Firebase Hosting —
-   you're using GitHub Pages.
-4. Firebase shows you a `firebaseConfig` object. Copy those values into
-   **`firebase-config.js`**, replacing every `PASTE_...` placeholder.
-5. In that same file, change the last line to:
-
-   ```js
-   export const FIREBASE_ENABLED = true;
-   ```
-
-> **On the API key being public:** it will be visible to anyone who views
-> source, and that is normal and expected for every Firebase web app on the
-> internet. It is an identifier, not a password. Your data is protected by the
-> rules in step 5 — which is exactly why you should not skip step 5.
-
-### 5. Publish the security rules
-
-1. **Firestore Database → Rules** tab.
-2. Delete what is there, paste the entire contents of **`firestore.rules`**.
-3. Click **Publish**.
-
-These rules say: anyone may submit once, nobody may read anything unless their
-UID is in the `admins` collection.
-
-### 6. Viewing results — the PIN
-
-There is no admin account to create. The results page at `admin.html` asks for
-a **PIN**, set at the top of that file:
-
-```js
-const ACCESS_PIN = '2026';
-```
-
-Change it by editing that one line and committing.
-
-> **Please read this once so nobody is surprised later.** The PIN is checked in
-> the browser, not by the database. That means two things are true:
->
-> 1. Anyone who views the page source can read the PIN.
-> 2. The Firestore rules allow **any visitor to read submissions**, PIN or no
->    PIN, because a browser-side PIN cannot gate a database.
->
-> In practice, treat every submission as public information. This was a
-> deliberate trade for convenience. If that ever stops being the right trade,
-> see "Making results private again" below — it is a 10-minute change.
-
-Submissions are still **immutable**: nobody, including you, can edit or delete
-one through the web app. Corrections are made in the Firebase console on purpose.
+**Adding an eleventh fundamental:** drop in `data/cf11.js` copying the shape of
+any existing one, then add a line to `FUNDAMENTALS` in `data/manifest.js`.
+Nothing else changes.
 
 ---
 
-## Making results private again
+## The ten
 
-If you later want results genuinely restricted:
+| CF | Questions | Sections |
+|---:|---:|---:|
+| 1 | 25 | 7 |
+| 2 | 39 | 8 |
+| 3 | 23 | 3 |
+| 4 | 20 | 6 |
+| 5 | 22 | 6 |
+| 6 | 19 | 4 |
+| 7 | 38 | 10 |
+| 8 | 5 | 1 |
+| 9 | 24 | 7 |
+| 10 | 18 | 4 |
+| | **233** | |
 
-1. In `firestore.rules`, change the submissions read rule from
-   `allow read: if true;` to `allow read: if isAdmin();` and publish.
-2. In Firebase → **Authentication → Users → Add user**, create an account for
-   each person who should see results.
-3. In Firestore → **Data**, create a collection `admins` with one document per
-   viewer, the **document ID being that person's Auth UID**.
-4. Swap the PIN gate in `admin.html` for a Firebase email/password sign-in
-   (or Google sign-in, which needs no passwords at all).
-
-The `isAdmin()` function and the `/admins` rules are already in place for this —
-nothing needs to be rebuilt.
-
----
-
-## Part 2 — Publish on GitHub Pages (about 5 minutes)
-
-1. Create a new repository on GitHub — e.g. `core-fundamentals`.
-   Public is fine; there are no secrets in these files.
-2. Upload every file, keeping the structure intact.
-   (Web UI: **Add file → Upload files**, then drag the whole folder in.)
-3. In the repo, go to **Settings → Pages**.
-4. Under *Source* choose **Deploy from a branch**; branch `main`, folder
-   `/ (root)`. **Save.**
-5. Wait a minute or two, then your site is live at:
-
-   ```
-   https://<your-username>.github.io/core-fundamentals/
-   ```
-
-Send clubs the plain link. Keep `.../admin.html` and the PIN to yourselves.
+CF#8 is deliberately short. A five-question score is coarser than the others —
+one answer moves it further — so read it with that in mind.
 
 ---
 
-## How the scoring works
+## Saving and resuming
+
+Progress is stored in Firestore in a `drafts` collection, one document per Club
+per fundamental, at a predictable id (`toledo-country-club--cf7`). Anyone at
+that club resumes simply by choosing the club — there is no login, no code, and
+no dependence on the browser they started in.
+
+Saves are **debounced**: one write a second and a half after the last answer,
+not one per tap. Across 26 clubs and ten fundamentals that stays comfortably
+inside Firebase's free tier.
+
+The bar at the bottom of every assessment shows the save state — *Saving…*,
+*All work saved*, or a clear failure message. If the network drops, answers stay
+on screen and the next successful save catches up.
+
+**One thing to know.** If two people at the same club have the same fundamental
+open at once, the last answer saved wins. There is no locking. The hub warns
+about this. In practice a quick word between the GM and the Enrollment Director
+avoids it; if it ever becomes a real problem the fix is a per-session resume
+code rather than keying on the club.
+
+On submit the draft is **flagged, not deleted**, so a club can reopen a finished
+assessment and re-run it next quarter without losing what they said last time.
+
+---
+
+## Scoring
 
 Each statement maps Yes and No onto the 101 / 201 / 301 / 401 ladder. Some
 statements are worth the same either way (Yes = 101, No = 101); others carry a
 real gap (Yes = 401, No = 201).
 
-A plain average would reward a club for answering questions where Yes and No
-are close together. So instead the score is **range-scaled**:
+A plain average would reward a club for answering questions where Yes and No sit
+close together. So the score is **range-scaled**:
 
 ```
-ratio  = (points earned − worst possible) ÷ (best possible − worst possible)
-level  = round(1 + ratio × 3)   →   1 = 101, 4 = 401
+ratio = (points earned − worst possible) ÷ (best possible − worst possible)
+level = round(1 + ratio × 3)      1 = 101, 4 = 401
 ```
 
-Worst and best possible are computed from *only the questions that were
-actually answered*, so a partly finished assessment is still scored fairly.
-The same math runs again inside each section to produce the section rollup kept
-in the results dashboard.
-
-This is the identical logic from the original scorecard — nothing changed.
+Worst and best possible are computed from *only the questions actually
+answered*, so a partly finished assessment still scores fairly.
 
 ---
 
-## Day-to-day use
+## "What to work on next"
 
-**A club takes the assessment.** They pick their Club from the dropdown, list
-the participating team members, answer all 25, and press *Calculate Our Score*.
-Their level, percentage, answer distribution, and a ranked list of what to work
-on next appear on screen. Then they can:
+Every club gets a ranked list built from the questions they answered **No**.
 
-- **Submit to Century Golf** — writes one record to Firestore. Enabled only
-  once the Club, the participating team members, and all 25 answers are complete.
-- **Print / Save as PDF** — opens the browser print dialog against a clean
-  report layout: header, participating team members, score, the full priority
-  list, and all 25 answers. In the print dialog choose *Save as PDF* as the
-  destination. Works on phones too, and works whether or not they submit.
+```
+foundation = 4 − levelValue[yes]      a 101 item scores 3, a 401 item scores 0
+gain       = levelValue[yes] − levelValue[no]
+score      = foundation × 2 + gain    ties break to the earlier question
+```
 
-**You review results.** Open `admin.html`, enter the PIN, and you get:
+**Foundation deliberately leads.** Each fundamental is a ladder, so the
+highest-leverage gap is the lowest unmet rung — it gates everything above it.
+Ranking on point movement alone produced nonsense: it put *"walk the Club daily
+confirming collateral is in place"* above *"design your Club invitation."* You
+cannot audit collateral that was never designed.
 
-- Four summary tiles — submissions, clubs reporting, average % of range, most
-  common level
-- A sortable table (click any column header) with a filter box
-- Click any row for the full detail drawer — the priorities that Club was given,
-  every answer, section rollup, and a *Print* button for that single submission
-- **Export CSV — summary**: one row per submission, for a quick pivot
-- **Export CSV — every answer**: one row per answer, for question-level
-  analysis across the portfolio ("which question does everyone fail?")
+To shift the emphasis, change the two multipliers in `buildPriorities()` in
+`shared.js`. The screen shows the top six; the printed report lists every No.
 
-Both exports respect the current filter, so you can export a single club.
+### Action statements
+
+Each statement may carry an `action` — the plain-language instruction a club
+reads instead of a restated question. **CF#1 has all 25 written. CF#2–10 do
+not yet**, and where an action is missing the engine shows the question itself.
+That works and reads acceptably, it is just stiffer than a hand-written line.
+
+To upgrade a fundamental, add `action: "…"` to its statements in its data file.
+Partial is fine — written actions and fallbacks can coexist in the same file.
+
+---
+
+## Access and privacy — read once
+
+The results dashboard is gated by a **PIN checked in the browser** (`ACCESS_PIN`
+at the top of `admin.html`). Two things follow:
+
+1. Anyone who views the page source can read the PIN.
+2. The Firestore rules allow **any visitor to read submissions and drafts**, PIN
+   or no PIN, because a browser-side PIN cannot gate a database.
+
+**Treat submissions and drafts as public information.** This was a deliberate
+trade for convenience. Note it now covers ten fundamentals of candid
+self-assessment rather than one, which is worth revisiting.
+
+What holds regardless: submitted assessments can never be edited or erased
+through the web app, and malformed writes are rejected by the rules.
+
+### Making results private again
+
+1. In `firestore.rules`, change both `allow read: if true;` to
+   `allow read: if isAdmin();` and publish.
+2. Firebase → **Authentication → Users → Add user** for each viewer.
+3. Firestore → **Data** → collection `admins`, one document per viewer, the
+   **document ID being that person's Auth UID**.
+4. Replace the PIN gate in `admin.html` with a Firebase sign-in. Google sign-in
+   needs no passwords and would also make drafts private per person.
+
+`isAdmin()` and the `/admins` rules are already in place — nothing is rebuilt.
+
+---
+
+## Firebase setup
+
+Already done for `cgp-core-fundamentals`. If it ever needs recreating:
+
+1. Firestore Database → Create → **production mode**, `nam5 (United States)`.
+2. Authentication → Sign-in method → enable **Anonymous** (used by every visitor
+   so the rules have something to check) and **Email/Password** (unused today,
+   kept for the private-results path).
+3. Project settings → Your apps → web app → copy the config into
+   `firebase-config.js` and set `FIREBASE_ENABLED = true`.
+4. Firestore → Rules → paste `firestore.rules` → **Publish**. Do not skip this.
+
+Costs nothing. The free Spark plan covers 20,000 writes a day; a full round of
+ten assessments across 26 clubs is a small fraction of one day's allowance.
+
+---
+
+## Publishing
+
+GitHub Pages, `main` branch, `/ (root)`. Keep the folder structure — `data/`
+and `assets/` matter.
+
+Send clubs the plain site link. Keep `admin.html` and the PIN to yourselves.
 
 ---
 
 ## Editing things later
 
-**A question changed.** Open `index.html`, find the `statements` array near the
-top of the `<script>` block, edit the text or the `yes:` / `no:` values. Nothing
-else needs touching — the page, the print report, and the CSV all read from
-that one array.
+**A question changed.** Edit it in `data/cfN.js`. The assessment, the printable
+report, the priorities and the CSV exports all read from that one array.
 
-**You want a second Core Fundamental.** Copy `index.html` to `cf2.html`,
-replace the `statements` array and the masthead text, and change
-`coreFundamental` in the submit payload from `'CF1 — Friends Inviting Friends'`
-to CF2. The admin dashboard picks it up with no changes.
+**The club list changed.** Edit `CLUBS` in `data/manifest.js`.
 
----
-
-## Editing the Club list and the priority ranking
-
-**Club list.** `index.html` has a `CLUBS` array near the top of the script
-block. Add, remove, or rename a Club there and the dropdown updates.
-
-**Priority ranking.** Each statement carries an `action` — the plain-language
-instruction a Club sees in "What to work on next". The order is computed as:
-
-```
-foundation = 4 - levelValue[yes]     a 101 item scores 3, a 401 item scores 0
-gain       = levelValue[yes] - levelValue[no]
-score      = foundation * 2 + gain
-```
-
-Foundation leads deliberately. CF#1 is a ladder, so the highest-leverage gap is
-the lowest unmet rung — it gates everything above it. Several statements score
-the same whether the answer is Yes or No, so they earn no points at all, yet
-they are prerequisites: ranking purely on points would tell a Club to run daily
-collateral walk-throughs before it has designed an invitation to walk past.
-
-To shift the emphasis toward raw score movement, swap the two multipliers on
-the `score` line. The on-screen list shows the top 6; the printed report shows
-every item answered No.
-
----
-
-## Testing before you go live
-
-The site works fully without Firebase. Leave `FIREBASE_ENABLED = false` and the
-assessment still scores and prints perfectly — only *Submit* is disabled, with
-a note explaining why. Good for showing a GM the flow before the back end is
-wired up.
-
-To run it locally you need a real web server, because browsers block ES modules
-loaded over `file://`:
+**Testing without Firebase.** Set `FIREBASE_ENABLED = false` in
+`firebase-config.js`. Assessments still score and print; only saving and
+submitting switch off, with a visible notice. To run locally you need a real web
+server, because browsers block ES modules over `file://`:
 
 ```bash
-cd core-fundamentals
 python3 -m http.server 8000
-# then open http://localhost:8000
 ```
 
 ---
 
 ## Troubleshooting
 
-**"The database is refusing to return results."** The Firestore rules were
-changed. The submissions read rule must be `allow read: if true;` for the
-PIN-gated dashboard to work.
+**"Could not save — check your connection."** The draft write failed. Answers
+are still on screen; they save on the next successful attempt. If it persists,
+check that Anonymous sign-in is still enabled.
 
-**Submit fails with a permission error.** Anonymous sign-in is probably off.
-Authentication → Sign-in method → enable **Anonymous**.
+**Progress not appearing on the hub.** The hub matches drafts and submissions on
+the exact club string. If a club was renamed in `manifest.js` after work began,
+old drafts sit under the old name.
 
-**Dashboard is empty but submissions exist.** Firestore needs the
-`submittedAt` field to sort. Records created by hand in the console without
-that field won't appear. Submit through the real form instead.
+**"The database is refusing to return results."** The rules were changed. Both
+`submissions` and `drafts` need `allow read: if true;` for the PIN-gated
+dashboard and the hub's progress view to work.
 
 **Print output has dark green backgrounds.** Turn off "Background graphics" in
-your browser's print dialog. The report is designed to print clean without it.
-
-**Nothing loads on GitHub Pages.** Check that `firebase-config.js` sits in the
-same folder as `index.html`, and give Pages a couple of minutes after the first
-push.
-
----
-
-## Costs
-
-Firebase's free Spark plan covers 20,000 document writes and 50,000 reads per
-day. A portfolio-wide assessment round is a few dozen writes. You will not pay
-anything, and you do not need to add a credit card.
+the browser's print dialog.

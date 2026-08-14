@@ -1,23 +1,23 @@
 rules_version = '2';
 
 // =============================================================================
-// Century Golf Partners — Core Fundamentals Self-Assessment
+// Century Golf Partners — Membership Core Fundamentals
 // Firestore security rules  ·  published in the Firebase console
 //
 // ACCESS MODEL
 // The results dashboard (admin.html) is gated by a PIN checked in the browser.
-// A browser-side PIN cannot gate a database, so the submissions read rule below
-// is open to any visitor. Treat submissions as public information.
+// A browser-side PIN cannot gate a database, so reads below are open to any
+// visitor. Treat submissions and drafts as public information.
 //
 // To make results private again:
 //   1. change  allow read: if true;  to  allow read: if isAdmin();
 //   2. create a Firebase Auth account for each viewer
 //   3. add a document at /admins/{that user's UID}
 //   4. replace the PIN gate in admin.html with a real sign-in
-// The isAdmin() function and /admins rules below are already in place for this.
+// The isAdmin() function and /admins rules below are already in place.
 //
-// What stays true either way: submissions cannot be edited or deleted by
-// anyone through the web app, and junk writes are rejected.
+// What holds regardless: submitted assessments can never be edited or erased
+// through the web app, and malformed writes are rejected.
 // =============================================================================
 
 service cloud.firestore {
@@ -28,6 +28,9 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    // -----------------------------------------------------------------------
+    // Submitted assessments — permanent, immutable
+    // -----------------------------------------------------------------------
     match /submissions/{docId} {
 
       // Open by design — see ACCESS MODEL above.
@@ -35,12 +38,9 @@ service cloud.firestore {
 
       // takerName holds the list of participating team members, so it is allowed
       // to be long — a club may list a dozen people.
-      // Anyone signed in (takers are signed in anonymously) may submit, but the
-      // document has to look like a real submission. This blocks junk writes and
-      // stops anyone using your Firestore as free storage.
       allow create: if request.auth != null
                     && request.resource.data.keys().hasAll([
-                         'club', 'takerName', 'level', 'pctOfRange',
+                         'club', 'takerName', 'cfId', 'level', 'pctOfRange',
                          'earnedPoints', 'answered', 'answers', 'submittedAt'
                        ])
                     && request.resource.data.club is string
@@ -49,31 +49,62 @@ service cloud.firestore {
                     && request.resource.data.takerName is string
                     && request.resource.data.takerName.size() > 0
                     && request.resource.data.takerName.size() <= 1000
+                    && request.resource.data.cfId is int
+                    && request.resource.data.cfId >= 1
+                    && request.resource.data.cfId <= 50
                     && request.resource.data.level in ['101', '201', '301', '401']
                     && request.resource.data.pctOfRange is int
                     && request.resource.data.pctOfRange >= 0
                     && request.resource.data.pctOfRange <= 100
                     && request.resource.data.answered is int
                     && request.resource.data.answered > 0
-                    && request.resource.data.answered <= 100
+                    && request.resource.data.answered <= 300
                     && request.resource.data.answers is list
-                    && request.resource.data.answers.size() <= 100
+                    && request.resource.data.answers.size() <= 300
                     && request.resource.data.submittedAt == request.time;
 
-      // Submissions are a permanent record. Nobody edits them from the web,
-      // including you — make corrections in the Firebase console instead, so
-      // an edit is always a deliberate act.
+      // A submitted assessment is a record of what a Club said on a given day.
+      // Nobody edits or deletes one from the web, including the membership team —
+      // corrections happen in the Firebase console, so an edit is always deliberate.
       allow update, delete: if false;
     }
 
-    // Reserved for the private-results path described above. Not used today.
-    // Never writable from the web: adding a viewer happens in the console.
+    // -----------------------------------------------------------------------
+    // Drafts — work in progress, one document per Club per Fundamental.
+    // Overwritten continuously as a club works. Deliberately updatable: that is
+    // what makes "stop now, come back tomorrow" possible across 233 questions.
+    // -----------------------------------------------------------------------
+    match /drafts/{docId} {
+      allow read: if true;
+
+      allow create, update: if request.auth != null
+                    && request.resource.data.club is string
+                    && request.resource.data.club.size() > 0
+                    && request.resource.data.club.size() <= 120
+                    && request.resource.data.cfId is int
+                    && request.resource.data.cfId >= 1
+                    && request.resource.data.cfId <= 50
+                    && request.resource.data.updatedAt == request.time
+                    && (!('teamMembers' in request.resource.data)
+                        || request.resource.data.teamMembers.size() <= 1000)
+                    && (!('answered' in request.resource.data)
+                        || (request.resource.data.answered is int
+                            && request.resource.data.answered >= 0
+                            && request.resource.data.answered <= 300));
+
+      // Drafts are never removed. On submit they are flagged, not erased, so a
+      // Club can reopen an assessment and re-run it later.
+      allow delete: if false;
+    }
+
+    // -----------------------------------------------------------------------
+    // Admin allow-list — reserved for the private-results path described above
+    // -----------------------------------------------------------------------
     match /admins/{uid} {
       allow read: if isAdmin();
       allow write: if false;
     }
 
-    // Everything else is closed.
     match /{document=**} {
       allow read, write: if false;
     }

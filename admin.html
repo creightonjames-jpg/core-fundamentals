@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Results — Core Fundamentals | Century Golf Partners</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23122019'/><text x='32' y='43' font-family='Georgia,serif' font-size='26' letter-spacing='1' fill='%23b8922f' text-anchor='middle'>CG</text></svg>">
+<link rel="stylesheet" href="assets/site.css">
 <style>
   :root{
     --ink:#1b241d;
@@ -168,7 +169,7 @@
 <body>
 
 <nav class="topnav">
-  <a href="index.html">Self-Assessment</a>
+  <a href="index.html">Core Fundamentals</a>
   <a href="admin.html" class="active">Results</a>
 </nav>
 
@@ -181,7 +182,7 @@
 <div class="gate-wrap" id="gate-wrap">
   <div class="card">
     <h2>Enter PIN</h2>
-    <p class="sub">Century Golf membership team access.</p>
+    <p class="sub">Century Golf membership team access — all ten fundamentals.</p>
     <form id="pin-form">
       <input type="password" id="pin" inputmode="numeric" autocomplete="off"
              maxlength="12" aria-label="PIN" autofocus>
@@ -195,6 +196,9 @@
 <div class="dash" id="dash">
   <div class="toolbar">
     <div class="who" id="who">Century Golf membership team</div>
+    <select class="search" id="cf-filter" style="min-width:210px;">
+      <option value="">All ten fundamentals</option>
+    </select>
     <input type="search" class="search" id="search" placeholder="Filter by club or name…">
     <button class="btn btn-outline btn-sm" id="csv-summary">Export CSV — summary</button>
     <button class="btn btn-outline btn-sm" id="csv-answers">Export CSV — every answer</button>
@@ -204,6 +208,7 @@
   <div class="stats">
     <div class="stat"><div class="k">Submissions</div><div class="v" id="s-count">—</div></div>
     <div class="stat"><div class="k">Clubs reporting</div><div class="v" id="s-clubs">—</div></div>
+    <div class="stat"><div class="k">Fundamentals covered</div><div class="v" id="s-cfs">—</div></div>
     <div class="stat"><div class="k">Average % of range</div><div class="v" id="s-avg">—</div></div>
     <div class="stat"><div class="k">Most common level</div><div class="v" id="s-mode">—</div></div>
   </div>
@@ -213,6 +218,7 @@
       <tr>
         <th data-sort="submittedAt">Date <span class="arrow"></span></th>
         <th data-sort="club">Club <span class="arrow"></span></th>
+        <th data-sort="cfId">CF <span class="arrow"></span></th>
         <th data-sort="takerName">Team members <span class="arrow"></span></th>
         <th data-sort="level">Level <span class="arrow"></span></th>
         <th data-sort="pctOfRange">% of range <span class="arrow"></span></th>
@@ -236,6 +242,20 @@
 
 <script type="module">
 import { firebaseConfig, SUBMISSIONS_COLLECTION, FIREBASE_ENABLED } from './firebase-config.js';
+import { FUNDAMENTALS } from './data/manifest.js';
+
+/* Populate the fundamental filter from the manifest, so adding an 11th
+   fundamental needs no change here. */
+(function(){
+  const f = document.getElementById('cf-filter');
+  FUNDAMENTALS.forEach(function(cf){
+    const o = document.createElement('option');
+    o.value = String(cf.id);
+    o.textContent = 'CF#' + cf.id + ' — ' + cf.headline.slice(0, 46) +
+                    (cf.headline.length > 46 ? '…' : '');
+    f.appendChild(o);
+  });
+})();
 
 /* ===========================================================================
    ACCESS PIN
@@ -340,9 +360,13 @@ async function loadSubmissions(){
 
 function visibleRows(){
   const term = document.getElementById('search').value.trim().toLowerCase();
+  const cf = document.getElementById('cf-filter').value;
   let out = rows;
+  if(cf){
+    out = out.filter(function(r){ return String(r.cfId || 1) === cf; });
+  }
   if(term){
-    out = rows.filter(function(r){
+    out = out.filter(function(r){
       return String(r.club||'').toLowerCase().indexOf(term) > -1 ||
              String(r.takerName||'').toLowerCase().indexOf(term) > -1;
     });
@@ -352,7 +376,7 @@ function visibleRows(){
     if(sortKey === 'submittedAt'){
       av = a.__date ? a.__date.getTime() : 0;
       bv = b.__date ? b.__date.getTime() : 0;
-    }else if(sortKey === 'pctOfRange' || sortKey === 'answered'){
+    }else if(sortKey === 'pctOfRange' || sortKey === 'answered' || sortKey === 'cfId'){
       av = Number(a[sortKey]||0); bv = Number(b[sortKey]||0);
     }else{
       av = String(a[sortKey]||'').toLowerCase(); bv = String(b[sortKey]||'').toLowerCase();
@@ -364,14 +388,17 @@ function visibleRows(){
 }
 
 function renderStats(){
-  document.getElementById('s-count').textContent = rows.length;
-  const clubs = new Set(rows.map(function(r){ return (r.club||'').trim().toLowerCase(); }).filter(Boolean));
+  const scope = visibleRows();
+  document.getElementById('s-count').textContent = scope.length;
+  const clubs = new Set(scope.map(function(r){ return (r.club||'').trim().toLowerCase(); }).filter(Boolean));
   document.getElementById('s-clubs').textContent = clubs.size;
-  if(rows.length){
-    const avg = Math.round(rows.reduce(function(s,r){ return s + Number(r.pctOfRange||0); },0) / rows.length);
+  const cfs = new Set(scope.map(function(r){ return Number(r.cfId || 1); }));
+  document.getElementById('s-cfs').textContent = cfs.size + ' / ' + FUNDAMENTALS.length;
+  if(scope.length){
+    const avg = Math.round(scope.reduce(function(s,r){ return s + Number(r.pctOfRange||0); },0) / scope.length);
     document.getElementById('s-avg').textContent = avg + '%';
     const tally = {};
-    rows.forEach(function(r){ tally[r.level] = (tally[r.level]||0) + 1; });
+    scope.forEach(function(r){ tally[r.level] = (tally[r.level]||0) + 1; });
     let best = '—', bestN = -1;
     Object.keys(tally).forEach(function(k){ if(tally[k] > bestN){ bestN = tally[k]; best = k; } });
     document.getElementById('s-mode').textContent = best;
@@ -393,6 +420,7 @@ function renderGrid(){
     tr.innerHTML =
       '<td>' + (r.__date ? r.__date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—') + '</td>' +
       '<td>' + esc(r.club) + '</td>' +
+      '<td><span class="lvl-pill" style="border-color:#a89e82;color:#7a7360;">CF#' + esc(r.cfId || 1) + '</span></td>' +
       '<td class="team">' + esc(r.takerName) + '</td>' +
       '<td><span class="lvl-pill lvl-' + esc(r.level) + '">' + esc(r.level) + ' ' + esc(levelNames[r.level]||'') + '</span></td>' +
       '<td>' + esc(r.pctOfRange) + '%</td>' +
@@ -415,12 +443,18 @@ document.querySelectorAll('#grid th').forEach(function(th){
   });
 });
 document.getElementById('search').addEventListener('input', renderGrid);
+document.getElementById('cf-filter').addEventListener('change', function(){
+  renderStats(); renderGrid();
+});
 
 /* ------------------------------------------------------------------ detail */
 function openDetail(r){
-  document.getElementById('d-title').textContent = (r.club || 'Submission') + ' — ' + (r.takerName || '');
+  document.getElementById('d-title').textContent =
+    'CF#' + (r.cfId || 1) + ' · ' + (r.club || 'Submission');
   let h = '<div class="d-meta">' +
     '<div><span>Club</span><b>' + esc(r.club) + '</b></div>' +
+    '<div><span>Core Fundamental</span><b>CF#' + esc(r.cfId || 1) + ' — ' +
+      esc(r.cfHeadline || '') + '</b></div>' +
     '<div><span>Participating team members</span><b>' + esc(r.takerName) + '</b></div>' +
     '<div><span>Submitted</span><b>' + (r.__date ? r.__date.toLocaleString('en-US') : '—') + '</b></div>' +
     '<div><span>Questions answered</span><b>' + esc(r.answered) + ' of ' + esc(r.totalQuestions||25) + '</b></div>' +
@@ -508,14 +542,14 @@ function stamp(){
 
 document.getElementById('csv-summary').addEventListener('click', function(){
   const data = visibleRows();
-  const head = ['Submitted','Club','Participating team members','Level','Level name','% of range',
+  const head = ['Submitted','Club','CF','Core Fundamental','Participating team members','Level','Level name','% of range',
                 'Points earned','Range min','Range max','Answered','Total questions',
                 'Count 101','Count 201','Count 301','Count 401','Doc ID'];
   const lines = [head.map(csvCell).join(',')];
   data.forEach(function(r){
     lines.push([
       r.__date ? r.__date.toISOString() : '',
-      r.club, r.takerName, r.level, r.levelName, r.pctOfRange,
+      r.club, r.cfId || 1, r.cfHeadline || '', r.takerName, r.level, r.levelName, r.pctOfRange,
       r.earnedPoints, r.minPoints, r.maxPoints, r.answered, r.totalQuestions||25,
       r.counts ? r.counts['101'] : '', r.counts ? r.counts['201'] : '',
       r.counts ? r.counts['301'] : '', r.counts ? r.counts['401'] : '',
@@ -527,13 +561,14 @@ document.getElementById('csv-summary').addEventListener('click', function(){
 
 document.getElementById('csv-answers').addEventListener('click', function(){
   const data = visibleRows();
-  const head = ['Submitted','Club','Participating team members','Q #','Section','Statement','Answer','Level','Points','Doc ID'];
+  const head = ['Submitted','Club','CF','Core Fundamental','Participating team members','Q #','Section','Statement','Answer','Level','Points','Doc ID'];
   const lines = [head.map(csvCell).join(',')];
   data.forEach(function(r){
     (r.answers||[]).forEach(function(a){
       lines.push([
         r.__date ? r.__date.toISOString() : '',
-        r.club, r.takerName, a.index, a.section, a.text, a.choice, a.level, a.points, r.__id
+        r.club, r.cfId || 1, r.cfHeadline || '', r.takerName, a.index, a.section, a.text,
+        a.choice, a.level, a.points, r.__id
       ].map(csvCell).join(','));
     });
   });
