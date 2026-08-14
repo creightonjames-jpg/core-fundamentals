@@ -33,6 +33,8 @@ service cloud.firestore {
       // Open by design — see ACCESS MODEL above.
       allow read: if true;
 
+      // takerName holds the list of participating team members, so it is allowed
+      // to be long — a club may list a dozen people.
       // Anyone signed in (takers are signed in anonymously) may submit, but the
       // document has to look like a real submission. This blocks junk writes and
       // stops anyone using your Firestore as free storage.
@@ -46,7 +48,7 @@ service cloud.firestore {
                     && request.resource.data.club.size() <= 120
                     && request.resource.data.takerName is string
                     && request.resource.data.takerName.size() > 0
-                    && request.resource.data.takerName.size() <= 120
+                    && request.resource.data.takerName.size() <= 1000
                     && request.resource.data.level in ['101', '201', '301', '401']
                     && request.resource.data.pctOfRange is int
                     && request.resource.data.pctOfRange >= 0

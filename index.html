@@ -107,7 +107,24 @@
     border-radius:2px;
     color:var(--ink);
   }
-  .field input:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+  .field select{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:10px 12px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:2px;
+    color:var(--ink);
+    appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%231f3a2e' stroke-width='1.6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 12px center;
+    padding-right:34px;
+    cursor:pointer;
+  }
+  .field input:focus, .field select:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+  .field select:invalid, .field select option[value=""]{ color:#8a8267; }
   .field .req{ color:var(--brass); }
 
   .legend{
@@ -285,40 +302,83 @@
   .dist-tile .count{ font-size:24px; color:var(--forest); margin:6px 0 2px; font-weight:600; }
   .dist-tile .pct{ font-size:12px; color:#6a6552; }
 
-  /* section breakdown */
-  .breakdown{
+  /* priorities */
+  .priorities{
     background:var(--paper);
     border:1px solid var(--line);
+    border-left:4px solid var(--brass);
     border-radius:3px;
-    padding:6px 0;
+    padding:6px 0 10px;
     margin-bottom:22px;
   }
-  .breakdown h4{
-    margin:14px 22px 10px;
+  .priorities h4{
+    margin:16px 24px 4px;
     font-size:13px;
     letter-spacing:0.16em;
     text-transform:uppercase;
     color:var(--brass);
     font-weight:700;
   }
-  .bd-row{
+  .priorities .pri-lede{
+    margin:0 24px 12px;
+    font-size:13px;
+    color:#6a6552;
+    line-height:1.5;
+  }
+  .pri-row{
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     gap:14px;
-    padding:9px 22px;
+    padding:11px 24px;
     border-top:1px solid #eae4d2;
-    font-size:13.5px;
+    font-size:14.5px;
+    line-height:1.5;
   }
-  .bd-name{ flex:1 1 auto; }
-  .bd-meter{
-    flex:0 0 130px;
-    height:7px;
-    background:#e6e0cd;
-    border-radius:4px;
-    overflow:hidden;
+  .pri-rank{
+    flex:0 0 22px;
+    font-weight:700;
+    color:var(--brass);
+    font-size:13px;
+    padding-top:2px;
   }
-  .bd-meter i{ display:block; height:100%; background:var(--forest); }
-  .bd-val{ flex:0 0 92px; text-align:right; color:var(--forest); font-weight:600; }
+  .pri-text{ flex:1 1 auto; }
+  .pri-text .pri-q{
+    display:block;
+    margin-top:4px;
+    font-size:12px;
+    color:#8a8267;
+    font-family:Georgia, serif;
+  }
+  .pri-tag{
+    flex:0 0 auto;
+    align-self:center;
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:10px;
+    white-space:nowrap;
+    border:1px solid var(--forest);
+    color:var(--forest);
+    background:rgba(31,58,46,0.08);
+  }
+  .pri-tag.foundation{
+    border-color:var(--brass);
+    color:#7d6320;
+    background:rgba(184,146,47,0.14);
+  }
+  .pri-more{
+    margin:12px 24px 4px;
+    font-size:12.5px;
+    color:#8a8267;
+    font-style:italic;
+  }
+  .pri-clear{
+    margin:4px 24px 10px;
+    font-size:14.5px;
+    color:var(--pass);
+    line-height:1.5;
+  }
 
   /* action row */
   .action-row{
@@ -513,7 +573,9 @@
   <div class="identity-card">
     <div class="field">
       <label for="club">Club <span class="req">*</span></label>
-      <input type="text" id="club" autocomplete="organization" placeholder="e.g. Stonebriar Country Club">
+      <select id="club" autocomplete="organization">
+        <option value="">Select your Club…</option>
+      </select>
     </div>
     <div class="field">
       <label for="taker">Your name <span class="req">*</span></label>
@@ -550,9 +612,11 @@
 
   <div class="dist-grid" id="dist-grid"></div>
 
-  <div class="breakdown">
-    <h4>Where you stand, section by section</h4>
-    <div id="bd-rows"></div>
+  <div class="priorities">
+    <h4>What to work on next</h4>
+    <p class="pri-lede" id="pri-lede"></p>
+    <div id="pri-rows"></div>
+    <p class="pri-more" id="pri-more" style="display:none;"></p>
   </div>
 
   <div class="action-row">
@@ -588,8 +652,8 @@
   </div>
 
   <div class="pr-block">
-    <div class="pr-h2">Section breakdown</div>
-    <table class="pr-table" id="pr-sections"></table>
+    <div class="pr-h2">What to work on next</div>
+    <table class="pr-table" id="pr-priorities"></table>
   </div>
 
   <div class="pr-block pr-answers">
@@ -612,38 +676,82 @@ import { firebaseConfig, SUBMISSIONS_COLLECTION, FIREBASE_ENABLED } from './fire
    original scorecard. To edit a question, edit it here and nowhere else.
 --------------------------------------------------------------------------- */
 const statements = [
-  { section: "A. Invitation Design & Physical Standards", text: "Have invitations been designed and approved with matching cardstock and envelopes?", yes: "101", no: "101" },
-  { section: "A. Invitation Design & Physical Standards", text: "Are your invitation templates saved on your computer for both the Member invitation and the Ambassador invitation?", yes: "101", no: "101" },
-  { section: "A. Invitation Design & Physical Standards", text: "Do the GM and Enrollment Director send any and all changes to your Club’s invitation to your Membership Regional for approval?", yes: "101", no: "101" },
-  { section: "A. Invitation Design & Physical Standards", text: "Is your invitation sanctioned by Club leadership (Board or Ambassador Committee), with their names printed on it?", yes: "101", no: "101" },
-  { section: "A. Invitation Design & Physical Standards", text: "Do the GM and Department heads know where to find the Invitation templates and can they print an invitation when you are not available?", yes: "201", no: "101" },
-  { section: "A. Invitation Design & Physical Standards", text: "Do all department heads and front of the house staff know where to send members to get an invitation for a friend?", yes: "201", no: "101" },
-  { section: "A. Invitation Design & Physical Standards", text: "Are all invitations presented enclosed in matching envelopes with the invited friend’s name handwritten on it?", yes: "201", no: "101" },
-  { section: "A. Invitation Design & Physical Standards", text: "Is a postage stamp (not a postage machine) always used when mailing the invitation?", yes: "101", no: "101" },
+  { section: "A. Invitation Design & Physical Standards", text: "Have invitations been designed and approved with matching cardstock and envelopes?", yes: "101", no: "101", action: "Design your Club invitation on proper cardstock with matching envelopes, and get it approved." },
+  { section: "A. Invitation Design & Physical Standards", text: "Are your invitation templates saved on your computer for both the Member invitation and the Ambassador invitation?", yes: "101", no: "101", action: "Save both invitation templates — Member and Ambassador — where they can be found and reprinted." },
+  { section: "A. Invitation Design & Physical Standards", text: "Do the GM and Enrollment Director send any and all changes to your Club’s invitation to your Membership Regional for approval?", yes: "101", no: "101", action: "Route every invitation change through your Membership Regional before anything is printed." },
+  { section: "A. Invitation Design & Physical Standards", text: "Is your invitation sanctioned by Club leadership (Board or Ambassador Committee), with their names printed on it?", yes: "101", no: "101", action: "Have the Board or Ambassador Committee sanction the invitation, with their names printed on it." },
+  { section: "A. Invitation Design & Physical Standards", text: "Do the GM and Department heads know where to find the Invitation templates and can they print an invitation when you are not available?", yes: "201", no: "101", action: "Show the GM and department heads where the templates live, so anyone can print an invitation when you are out." },
+  { section: "A. Invitation Design & Physical Standards", text: "Do all department heads and front of the house staff know where to send members to get an invitation for a friend?", yes: "201", no: "101", action: "Make sure every department head and front-of-house team member knows where to send a member who wants an invitation." },
+  { section: "A. Invitation Design & Physical Standards", text: "Are all invitations presented enclosed in matching envelopes with the invited friend’s name handwritten on it?", yes: "201", no: "101", action: "Present every invitation in a matching envelope with the friend’s name handwritten on it." },
+  { section: "A. Invitation Design & Physical Standards", text: "Is a postage stamp (not a postage machine) always used when mailing the invitation?", yes: "101", no: "101", action: "Use a real postage stamp on every mailed invitation — never a postage meter." },
 
-  { section: "B. Invitation as a Required Gate", text: "Are all prospective members presented with the appropriate Invitation?", yes: "101", no: "101" },
-  { section: "B. Invitation as a Required Gate", text: "Is the Invitation presented or mailed before any discussion of the preferred membership offer?", yes: "201", no: "101" },
-  { section: "B. Invitation as a Required Gate", text: "Is every prospective member presented a formal invitation to join before advancing to the application?", yes: "101", no: "101" },
+  { section: "B. Invitation as a Required Gate", text: "Are all prospective members presented with the appropriate Invitation?", yes: "101", no: "101", action: "Present the appropriate invitation to every prospective member, without exception." },
+  { section: "B. Invitation as a Required Gate", text: "Is the Invitation presented or mailed before any discussion of the preferred membership offer?", yes: "201", no: "101", action: "Present or mail the invitation before any conversation about the membership offer." },
+  { section: "B. Invitation as a Required Gate", text: "Is every prospective member presented a formal invitation to join before advancing to the application?", yes: "101", no: "101", action: "Give every prospect a formal invitation to join before they reach the application." },
 
-  { section: "C. Annual Club Training & Committee Education", text: "Do Department heads and front-of-house staff complete an annual Membership by Invitation strategy and processes refresher including education on “private club language”?", yes: "201", no: "101" },
-  { section: "C. Annual Club Training & Committee Education", text: "Do the Board, Ambassador Committee, and Club Sports Committees each participate annually in a Membership by Invitation presentation and confirm their understanding of the strategy, processes and importance?", yes: "201", no: "101" },
+  { section: "C. Annual Club Training & Committee Education", text: "Do Department heads and front-of-house staff complete an annual Membership by Invitation strategy and processes refresher including education on “private club language”?", yes: "201", no: "101", action: "Run the annual Membership by Invitation refresher for department heads and front-of-house staff, including private club language." },
+  { section: "C. Annual Club Training & Committee Education", text: "Do the Board, Ambassador Committee, and Club Sports Committees each participate annually in a Membership by Invitation presentation and confirm their understanding of the strategy, processes and importance?", yes: "201", no: "101", action: "Deliver the annual Membership by Invitation presentation to the Board, Ambassador Committee, and Sports Committees, and confirm they understood it." },
 
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the GM lead an annual comprehensive plan to consistently educate and re-educate members on the importance of inviting friends?", yes: "301", no: "201" },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through bi-weekly member communications?", yes: "201", no: "101" },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through clubhouse signage (posters, scan cards, tent cards, golf cart signage, television monitors)?", yes: "201", no: "101" },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through a physical invitation on every sports desk?", yes: "301", no: "201" },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club train all department head and front of the house staff on their role in showing the invitation to members daily in their department?", yes: "401", no: "301" },
-  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Enrollment Director do a daily club walk-through to confirm collateral is in place?", yes: "401", no: "201" },
+  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the GM lead an annual comprehensive plan to consistently educate and re-educate members on the importance of inviting friends?", yes: "301", no: "201", action: "Have the GM own a written annual plan for educating members on why inviting friends matters." },
+  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through bi-weekly member communications?", yes: "201", no: "101", action: "Put Invitation education into member communications on a bi-weekly rhythm." },
+  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through clubhouse signage (posters, scan cards, tent cards, golf cart signage, television monitors)?", yes: "201", no: "101", action: "Get Invitation collateral visible in the clubhouse — posters, tent cards, scan cards, cart signage, monitors." },
+  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club execute ongoing Invitation education at the Club through a physical invitation on every sports desk?", yes: "301", no: "201", action: "Place a physical invitation on every sports desk." },
+  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Club train all department head and front of the house staff on their role in showing the invitation to members daily in their department?", yes: "401", no: "301", action: "Train every department head and front-of-house team member on their daily role in showing the invitation to members." },
+  { section: "D. Ongoing Visibility & Daily Education Plan", text: "Does the Enrollment Director do a daily club walk-through to confirm collateral is in place?", yes: "401", no: "201", action: "Have the Enrollment Director walk the Club daily to confirm collateral is where it belongs." },
 
-  { section: "E. Invitation Language & New Member Culture", text: "Is the Club using invitation language (“you are invited”) for all member events?", yes: "301", no: "201" },
-  { section: "E. Invitation Language & New Member Culture", text: "Are new members reminded that they now have their own Member Invitation to give to friends?", yes: "301", no: "201" },
+  { section: "E. Invitation Language & New Member Culture", text: "Is the Club using invitation language (“you are invited”) for all member events?", yes: "301", no: "201", action: "Switch to invitation language — “you are invited” — across every member event." },
+  { section: "E. Invitation Language & New Member Culture", text: "Are new members reminded that they now have their own Member Invitation to give to friends?", yes: "301", no: "201", action: "Remind every new member that they now hold their own Member Invitation to give a friend." },
 
-  { section: "F. Financial Literacy Education (Board & Membership)", text: "Is there consistent education for the Board and general membership on the historical attrition and member replacement needs of the Club?", yes: "301", no: "201" },
-  { section: "F. Financial Literacy Education (Board & Membership)", text: "Is there consistent education on the importance of a Full Privilege member waitlist and dues line for the continual improvement of the Club and its amenities and services including its financial impact?", yes: "301", no: "201" },
+  { section: "F. Financial Literacy Education (Board & Membership)", text: "Is there consistent education for the Board and general membership on the historical attrition and member replacement needs of the Club?", yes: "301", no: "201", action: "Educate the Board and membership on the Club’s historical attrition and how many members must be replaced each year." },
+  { section: "F. Financial Literacy Education (Board & Membership)", text: "Is there consistent education on the importance of a Full Privilege member waitlist and dues line for the continual improvement of the Club and its amenities and services including its financial impact?", yes: "301", no: "201", action: "Educate the Board and membership on what a Full Privilege waitlist and a healthy dues line fund at the Club." },
 
-  { section: "G. CRM Tracking", text: "Is the Enrollment Director using a CRM daily to track every invitation issued, every prospect named, and every member conversation — ensuring nothing falls through the cracks?", yes: "301", no: "201" },
-  { section: "G. CRM Tracking", text: "Does the GM verify weekly the effective use of the CRM program by the Enrollment Director in their weekly meeting?", yes: "401", no: "301" }
+  { section: "G. CRM Tracking", text: "Is the Enrollment Director using a CRM daily to track every invitation issued, every prospect named, and every member conversation — ensuring nothing falls through the cracks?", yes: "301", no: "201", action: "Get the Enrollment Director into the CRM daily — every invitation issued, every prospect, every member conversation." },
+  { section: "G. CRM Tracking", text: "Does the GM verify weekly the effective use of the CRM program by the Enrollment Director in their weekly meeting?", yes: "401", no: "301", action: "Add CRM review to the GM’s weekly meeting with the Enrollment Director." }
 ];
+
+/* ---------------------------------------------------------------------------
+   CLUB LIST
+   To add, remove, or rename a Club, edit this one array. The dropdown, the
+   printed report, and the results dashboard all read from it.
+--------------------------------------------------------------------------- */
+const CLUBS = [
+  "Anthem Country Club",
+  "Balcones Country Club",
+  "Ballantyne Country Club",
+  "Bear Creek Country Club",
+  "Canyon Oaks Country Club",
+  "Chenal Country Club",
+  "The Citrus Club",
+  "Eagle's Landing Country Club",
+  "El Camino Country Club",
+  "Las Posas Country Club",
+  "Marbella Country Club",
+  "The Medallion Club",
+  "Monterey Country Club",
+  "The Oregon Golf Club",
+  "Palm Valley Country Club",
+  "PGA West",
+  "The Club at Prescott Lakes",
+  "Spanish Hills Country Club",
+  "Sunset Hills Country Club",
+  "Sycamore Creek Country Club",
+  "Sylvania Country Club",
+  "The Nelson Golf and Sports Club",
+  "Toledo Country Club",
+  "The Valor Club",
+  "Wood Ranch Country Club",
+  "The Club at Wynstone"
+];
+
+(function populateClubs(){
+  const sel = document.getElementById('club');
+  CLUBS.forEach(function(name){
+    const o = document.createElement('option');
+    o.value = name;
+    o.textContent = name;
+    sel.appendChild(o);
+  });
+})();
 
 const levels = ['101','201','301','401'];
 const levelValue = {'101':1,'201':2,'301':3,'401':4};
@@ -796,6 +904,52 @@ function computeResult(){
     sections.push({ name: name, pct: Math.round(r*100), level: lv, answered: s.n });
   });
 
+  /* ---- priorities: what to work on next -------------------------------
+     Built from the statements answered "No", ranked by leverage.
+
+     CF#1 is a ladder: 101 Awareness -> 201 Implementation -> 301 Excellence
+     -> 401 Culture. In a staged model the highest-leverage gap is the LOWEST
+     unmet rung, because it gates everything above it. So:
+
+       foundation = how early on the ladder the item sits
+                    (4 - levelValue[yes]) — a 101 item scores 3, a 401 scores 0
+       gain       = how many rungs a Yes would move this item
+                    (levelValue[yes] - levelValue[no])
+
+       score = foundation * 2 + gain
+
+     Foundation leads. Within the same rung, the item that moves the score
+     furthest comes first. Ties break toward the earlier question, which keeps
+     sections A-G in their intended sequence.
+
+     Why not rank by point gain alone: several statements score the same
+     either way (Yes = 101, No = 101), so they earn no points — yet they are
+     prerequisites. Ranking on points would tell a Club to run daily collateral
+     walk-throughs before it has designed an invitation to walk past.
+
+     To change the emphasis, edit the two multipliers on the score line below.
+  --------------------------------------------------------------------- */
+  const priorities = answers
+    .filter(function(a){ return a.choice === 'No'; })
+    .map(function(a){
+      const item = statements[a.index - 1];
+      const gain = levelValue[item.yes] - levelValue[item.no];
+      const foundation = 4 - levelValue[item.yes];
+      return {
+        index: a.index,
+        section: a.section,
+        action: item.action,
+        statement: item.text,
+        liftsTo: item.yes,
+        gain: gain,
+        score: foundation * 2 + gain
+      };
+    })
+    .sort(function(x, y){
+      if(y.score !== x.score) return y.score - x.score;
+      return x.index - y.index;
+    });
+
   return {
     club: document.getElementById('club').value.trim(),
     takerName: document.getElementById('taker').value.trim(),
@@ -810,6 +964,7 @@ function computeResult(){
     totalQuestions: TOTAL,
     counts: counts,
     sections: sections,
+    priorities: priorities,
     answers: answers
   };
 }
@@ -839,29 +994,68 @@ function renderResult(r){
     distGrid.appendChild(tile);
   });
 
-  const bd = document.getElementById('bd-rows');
-  bd.innerHTML = '';
-  r.sections.forEach(function(s){
-    const row = document.createElement('div');
-    row.className = 'bd-row';
-    const name = document.createElement('div');
-    name.className = 'bd-name';
-    name.textContent = s.name;
-    const meter = document.createElement('div');
-    meter.className = 'bd-meter';
-    const fill = document.createElement('i');
-    fill.style.width = s.pct + '%';
-    meter.appendChild(fill);
-    const val = document.createElement('div');
-    val.className = 'bd-val';
-    val.textContent = s.level + ' · ' + s.pct + '%';
-    row.appendChild(name); row.appendChild(meter); row.appendChild(val);
-    bd.appendChild(row);
-  });
+  renderPriorities(r);
 
   buildPrintReport(r);
 
   document.getElementById('results').classList.add('show');
+}
+
+const MAX_PRIORITIES = 6;
+
+function renderPriorities(r){
+  const rows  = document.getElementById('pri-rows');
+  const lede  = document.getElementById('pri-lede');
+  const more  = document.getElementById('pri-more');
+  rows.innerHTML = '';
+  more.style.display = 'none';
+
+  const all = r.priorities || [];
+
+  if(all.length === 0){
+    lede.textContent = '';
+    const ok = document.createElement('p');
+    ok.className = 'pri-clear';
+    ok.textContent = 'Nothing flagged — you answered Yes to every question you completed. Hold the standard and re-run this assessment next quarter.';
+    rows.appendChild(ok);
+    return;
+  }
+
+  lede.textContent = all.length === 1
+    ? 'One gap surfaced. Start here.'
+    : 'Ranked by leverage — what moves your Club furthest, and what has to come first.';
+
+  const shown = all.slice(0, MAX_PRIORITIES);
+  shown.forEach(function(p, i){
+    const row = document.createElement('div');
+    row.className = 'pri-row';
+
+    const rank = document.createElement('div');
+    rank.className = 'pri-rank';
+    rank.textContent = (i + 1) + '.';
+
+    const text = document.createElement('div');
+    text.className = 'pri-text';
+    text.textContent = p.action;
+    const q = document.createElement('span');
+    q.className = 'pri-q';
+    q.textContent = 'Question ' + p.index + ' · ' + p.section;
+    text.appendChild(q);
+
+    const tag = document.createElement('div');
+    tag.className = 'pri-tag' + (p.gain === 0 ? ' foundation' : '');
+    tag.textContent = p.gain === 0 ? 'Foundation' : 'Lifts to ' + p.liftsTo;
+
+    row.appendChild(rank); row.appendChild(text); row.appendChild(tag);
+    rows.appendChild(row);
+  });
+
+  if(all.length > shown.length){
+    const n = all.length - shown.length;
+    more.style.display = '';
+    more.textContent = 'Plus ' + n + ' further item' + (n === 1 ? '' : 's') +
+      ' answered No — every one is listed in the printable report below.';
+  }
 }
 
 function buildPrintReport(r){
@@ -885,11 +1079,20 @@ function buildPrintReport(r){
   });
   document.getElementById('pr-dist').innerHTML = h;
 
-  let s = '<tr><th>Section</th><th>Answered</th><th>Level</th><th>% of range</th></tr>';
-  r.sections.forEach(function(sec){
-    s += '<tr><td>' + esc(sec.name) + '</td><td>' + sec.answered + '</td><td class="lvl">' + sec.level + '</td><td>' + sec.pct + '%</td></tr>';
-  });
-  document.getElementById('pr-sections').innerHTML = s;
+  const pri = r.priorities || [];
+  let s;
+  if(pri.length === 0){
+    s = '<tr><td>Nothing flagged \u2014 every question answered returned Yes. ' +
+        'Hold the standard and re-run this assessment next quarter.</td></tr>';
+  }else{
+    s = '<tr><th></th><th>Priority</th><th>Question</th><th>Effect</th></tr>';
+    pri.forEach(function(p, i){
+      s += '<tr><td class="num">' + (i+1) + '</td><td>' + esc(p.action) +
+           '</td><td class="ans">' + p.index + '</td><td class="lvl">' +
+           (p.gain === 0 ? 'Base' : p.liftsTo) + '</td></tr>';
+    });
+  }
+  document.getElementById('pr-priorities').innerHTML = s;
 
   let a = '<tr><th></th><th>Statement</th><th>Answer</th><th>Level</th></tr>';
   let sec = null;
@@ -938,7 +1141,8 @@ document.getElementById('print-btn').addEventListener('click', function(){
 });
 
 ['club','taker'].forEach(function(id){
-  document.getElementById(id).addEventListener('input', function(){
+  const el = document.getElementById(id);
+  ['input','change'].forEach(function(evt){ el.addEventListener(evt, function(){
     if(lastResult){
       lastResult.club = document.getElementById('club').value.trim();
       lastResult.takerName = document.getElementById('taker').value.trim();
@@ -948,7 +1152,7 @@ document.getElementById('print-btn').addEventListener('click', function(){
       buildPrintReport(lastResult);
     }
     refreshSubmitState();
-  });
+  }); });
 });
 
 function refreshSubmitState(){
@@ -958,7 +1162,7 @@ function refreshSubmitState(){
   const taker = document.getElementById('taker').value.trim();
   const n = countAnswered();
   const missing = [];
-  if(!club)  missing.push('your Club');
+  if(!club)  missing.push('your Club from the list');
   if(!taker) missing.push('your name');
   if(n < TOTAL) missing.push((TOTAL - n) + ' unanswered question' + ((TOTAL - n) === 1 ? '' : 's'));
 
@@ -1034,6 +1238,7 @@ document.getElementById('submit-btn').addEventListener('click', async function()
       totalQuestions: lastResult.totalQuestions,
       counts: lastResult.counts,
       sections: lastResult.sections,
+      priorities: lastResult.priorities,
       answers: lastResult.answers,
       submittedAt: fs.serverTimestamp(),
       userAgent: navigator.userAgent,
