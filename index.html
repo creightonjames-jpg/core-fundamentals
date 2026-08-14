@@ -86,8 +86,9 @@
     border-radius:3px;
     padding:20px 22px;
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:minmax(220px, 1fr) 1.6fr;
     gap:16px;
+    align-items:start;
   }
   .field label{
     display:block;
@@ -123,7 +124,21 @@
     padding-right:34px;
     cursor:pointer;
   }
-  .field input:focus, .field select:focus{ outline:2px solid var(--brass); outline-offset:1px; }
+  .field textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:15px;
+    padding:10px 12px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:2px;
+    color:var(--ink);
+    line-height:1.5;
+    resize:vertical;
+    min-height:46px;
+  }
+  .field textarea::placeholder{ color:#9a9280; }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:2px solid var(--brass); outline-offset:1px; }
   .field select:invalid, .field select option[value=""]{ color:#8a8267; }
   .field .req{ color:var(--brass); }
 
@@ -284,6 +299,12 @@
     border-top:1px solid var(--line);
     font-size:13px;
     color:#6a6552;
+  }
+  .result-summary .team{
+    margin-top:6px;
+    font-size:12.5px;
+    color:#8a8267;
+    line-height:1.5;
   }
   .dist-grid{
     display:grid;
@@ -480,6 +501,22 @@
     }
     .pr-meta div b{ font-weight:600; }
 
+    .pr-team{
+      font-size:10pt;
+      margin-bottom:16px;
+      padding-bottom:10px;
+      border-bottom:1px solid #e8e2d0;
+    }
+    .pr-team span{
+      display:block;
+      font-size:7.5pt;
+      letter-spacing:0.14em;
+      text-transform:uppercase;
+      color:#888;
+      margin-bottom:3px;
+    }
+    .pr-team b{ font-weight:600; line-height:1.5; white-space:pre-line; }
+
     .pr-score{
       border:1.5px solid #b8922f;
       background:#faf7ee !important;
@@ -578,8 +615,9 @@
       </select>
     </div>
     <div class="field">
-      <label for="taker">Your name <span class="req">*</span></label>
-      <input type="text" id="taker" autocomplete="name" placeholder="First and last name">
+      <label for="taker">Participating Team Members <span class="req">*</span></label>
+      <textarea id="taker" rows="2"
+        placeholder="Everyone who worked on this assessment — one per line, or separated by commas"></textarea>
     </div>
   </div>
 </div>
@@ -608,6 +646,7 @@
     <p id="result-avg"></p>
     <p id="result-desc"></p>
     <div class="who" id="result-who"></div>
+    <div class="team" id="result-team"></div>
   </div>
 
   <div class="dist-grid" id="dist-grid"></div>
@@ -636,19 +675,18 @@
 
   <div class="pr-meta">
     <div><span>Club</span><b id="pr-club">—</b></div>
-    <div><span>Completed by</span><b id="pr-taker">—</b></div>
     <div><span>Date</span><b id="pr-date">—</b></div>
     <div><span>Questions answered</span><b id="pr-answered">—</b></div>
+  </div>
+
+  <div class="pr-team">
+    <span>Participating team members</span>
+    <b id="pr-taker">—</b>
   </div>
 
   <div class="pr-score">
     <div class="pr-lv" id="pr-level">—</div>
     <div class="pr-detail" id="pr-detail"></div>
-  </div>
-
-  <div class="pr-block">
-    <div class="pr-h2">Answer distribution</div>
-    <table class="pr-table" id="pr-dist"></table>
   </div>
 
   <div class="pr-block">
@@ -980,7 +1018,9 @@ function renderResult(r){
     r.answered + ' of ' + r.totalQuestions + ' questions answered)';
   document.getElementById('result-desc').textContent = levelDesc[r.level];
   document.getElementById('result-who').textContent =
-    (r.club || 'Club not entered') + (r.takerName ? ' · ' + r.takerName : '') + ' · ' + prettyDate();
+    (r.club || 'Club not selected') + ' · ' + prettyDate();
+  document.getElementById('result-team').textContent =
+    r.takerName ? 'Participating team members: ' + oneLine(r.takerName) : '';
 
   const distGrid = document.getElementById('dist-grid');
   distGrid.innerHTML = '';
@@ -1060,7 +1100,7 @@ function renderPriorities(r){
 
 function buildPrintReport(r){
   document.getElementById('pr-club').textContent  = r.club || '—';
-  document.getElementById('pr-taker').textContent = r.takerName || '—';
+  document.getElementById('pr-taker').textContent = (r.takerName || '').trim() || '—';
   document.getElementById('pr-date').textContent  = prettyDate();
   document.getElementById('pr-answered').textContent = r.answered + ' of ' + r.totalQuestions;
   document.getElementById('pr-level').textContent = 'Level ' + r.level + ' — ' + r.levelName;
@@ -1070,14 +1110,6 @@ function buildPrintReport(r){
     '.  ' + levelDesc[r.level];
   document.getElementById('pr-foot-right').textContent =
     (r.club || 'Club') + ' · ' + prettyDate();
-
-  let h = '<tr><th>Level</th><th>Name</th><th>Questions</th><th>Share of answered</th></tr>';
-  levels.forEach(function(lvl){
-    const c = r.counts[lvl];
-    const pct = r.answered > 0 ? Math.round((c/r.answered)*100) : 0;
-    h += '<tr><td class="lvl">' + lvl + '</td><td>' + levelNames[lvl] + '</td><td>' + c + '</td><td>' + pct + '%</td></tr>';
-  });
-  document.getElementById('pr-dist').innerHTML = h;
 
   const pri = r.priorities || [];
   let s;
@@ -1109,6 +1141,15 @@ function buildPrintReport(r){
 
 function esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+/* Collapse a team-member list into one readable line for the summary strip.
+   Split on line breaks when the person used them, otherwise on commas — never
+   both, or "Jim Creighton, Enrollment Director" would be torn into two people. */
+function oneLine(v){
+  const t = String(v || '').trim();
+  if(!t) return '';
+  const parts = /\r?\n/.test(t) ? t.split(/\r?\n/) : t.split(',');
+  return parts.map(function(x){ return x.trim(); }).filter(Boolean).join(' · ');
 }
 function prettyDate(){
   return new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
@@ -1147,8 +1188,9 @@ document.getElementById('print-btn').addEventListener('click', function(){
       lastResult.club = document.getElementById('club').value.trim();
       lastResult.takerName = document.getElementById('taker').value.trim();
       document.getElementById('result-who').textContent =
-        (lastResult.club || 'Club not entered') +
-        (lastResult.takerName ? ' · ' + lastResult.takerName : '') + ' · ' + prettyDate();
+        (lastResult.club || 'Club not selected') + ' · ' + prettyDate();
+      document.getElementById('result-team').textContent =
+        lastResult.takerName ? 'Participating team members: ' + oneLine(lastResult.takerName) : '';
       buildPrintReport(lastResult);
     }
     refreshSubmitState();
@@ -1163,7 +1205,7 @@ function refreshSubmitState(){
   const n = countAnswered();
   const missing = [];
   if(!club)  missing.push('your Club from the list');
-  if(!taker) missing.push('your name');
+  if(!taker) missing.push('the participating team members');
   if(n < TOTAL) missing.push((TOTAL - n) + ' unanswered question' + ((TOTAL - n) === 1 ? '' : 's'));
 
   if(!lastResult){

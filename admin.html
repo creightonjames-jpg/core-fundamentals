@@ -89,6 +89,10 @@
   table.grid th:hover{ background:#27493a; }
   table.grid th .arrow{ color:var(--brass-light); font-size:9px; margin-left:4px; }
   table.grid td{ padding:11px 14px; border-top:1px solid #eae4d2; font-size:14px; }
+  table.grid td.team{
+    max-width:280px; font-size:13px; line-height:1.4; color:#4a4636;
+    white-space:pre-line;
+  }
   table.grid tbody tr{ cursor:pointer; }
   table.grid tbody tr:hover{ background:#f2eede; }
   .lvl-pill{
@@ -122,7 +126,7 @@
   .drawer-body{ padding:22px 24px 60px; }
   .d-meta{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:20px; }
   .d-meta div span{ display:block; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:#8a8267; margin-bottom:3px; }
-  .d-meta div b{ font-size:15px; font-weight:600; color:var(--forest); }
+  .d-meta div b{ font-size:15px; font-weight:600; color:var(--forest); line-height:1.45; white-space:pre-line; }
   .d-score{ border:1px solid var(--brass); background:var(--ivory); padding:16px 20px; text-align:center; margin-bottom:20px; }
   .d-score .lv{ font-size:22px; color:var(--forest); font-weight:600; }
   .d-score .dt{ font-size:13px; color:#5a5544; margin-top:5px; line-height:1.5; }
@@ -209,7 +213,7 @@
       <tr>
         <th data-sort="submittedAt">Date <span class="arrow"></span></th>
         <th data-sort="club">Club <span class="arrow"></span></th>
-        <th data-sort="takerName">Completed by <span class="arrow"></span></th>
+        <th data-sort="takerName">Team members <span class="arrow"></span></th>
         <th data-sort="level">Level <span class="arrow"></span></th>
         <th data-sort="pctOfRange">% of range <span class="arrow"></span></th>
         <th data-sort="answered" class="hide-sm">Answered <span class="arrow"></span></th>
@@ -389,7 +393,7 @@ function renderGrid(){
     tr.innerHTML =
       '<td>' + (r.__date ? r.__date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—') + '</td>' +
       '<td>' + esc(r.club) + '</td>' +
-      '<td>' + esc(r.takerName) + '</td>' +
+      '<td class="team">' + esc(r.takerName) + '</td>' +
       '<td><span class="lvl-pill lvl-' + esc(r.level) + '">' + esc(r.level) + ' ' + esc(levelNames[r.level]||'') + '</span></td>' +
       '<td>' + esc(r.pctOfRange) + '%</td>' +
       '<td class="hide-sm">' + esc(r.answered) + ' / ' + esc(r.totalQuestions||25) + '</td>';
@@ -417,7 +421,7 @@ function openDetail(r){
   document.getElementById('d-title').textContent = (r.club || 'Submission') + ' — ' + (r.takerName || '');
   let h = '<div class="d-meta">' +
     '<div><span>Club</span><b>' + esc(r.club) + '</b></div>' +
-    '<div><span>Completed by</span><b>' + esc(r.takerName) + '</b></div>' +
+    '<div><span>Participating team members</span><b>' + esc(r.takerName) + '</b></div>' +
     '<div><span>Submitted</span><b>' + (r.__date ? r.__date.toLocaleString('en-US') : '—') + '</b></div>' +
     '<div><span>Questions answered</span><b>' + esc(r.answered) + ' of ' + esc(r.totalQuestions||25) + '</b></div>' +
     '</div>';
@@ -504,7 +508,7 @@ function stamp(){
 
 document.getElementById('csv-summary').addEventListener('click', function(){
   const data = visibleRows();
-  const head = ['Submitted','Club','Completed by','Level','Level name','% of range',
+  const head = ['Submitted','Club','Participating team members','Level','Level name','% of range',
                 'Points earned','Range min','Range max','Answered','Total questions',
                 'Count 101','Count 201','Count 301','Count 401','Doc ID'];
   const lines = [head.map(csvCell).join(',')];
@@ -523,7 +527,7 @@ document.getElementById('csv-summary').addEventListener('click', function(){
 
 document.getElementById('csv-answers').addEventListener('click', function(){
   const data = visibleRows();
-  const head = ['Submitted','Club','Completed by','Q #','Section','Statement','Answer','Level','Points','Doc ID'];
+  const head = ['Submitted','Club','Participating team members','Q #','Section','Statement','Answer','Level','Points','Doc ID'];
   const lines = [head.map(csvCell).join(',')];
   data.forEach(function(r){
     (r.answers||[]).forEach(function(a){

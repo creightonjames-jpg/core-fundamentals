@@ -149,7 +149,8 @@ level  = round(1 + ratio × 3)   →   1 = 101, 4 = 401
 
 Worst and best possible are computed from *only the questions that were
 actually answered*, so a partly finished assessment is still scored fairly.
-The same math runs again inside each section to produce the section breakdown.
+The same math runs again inside each section to produce the section rollup kept
+in the results dashboard.
 
 This is the identical logic from the original scorecard — nothing changed.
 
@@ -157,24 +158,25 @@ This is the identical logic from the original scorecard — nothing changed.
 
 ## Day-to-day use
 
-**A club takes the assessment.** They enter Club and name, answer all 25,
-press *Calculate Our Score*. Their level, percentage, distribution, and
-section-by-section breakdown appear on screen. Then they can:
+**A club takes the assessment.** They pick their Club from the dropdown, list
+the participating team members, answer all 25, and press *Calculate Our Score*.
+Their level, percentage, answer distribution, and a ranked list of what to work
+on next appear on screen. Then they can:
 
 - **Submit to Century Golf** — writes one record to Firestore. Enabled only
-  once Club, name, and all 25 answers are complete.
+  once the Club, the participating team members, and all 25 answers are complete.
 - **Print / Save as PDF** — opens the browser print dialog against a clean
-  report layout: header, score, distribution, section breakdown, and all 25
-  answers. In the print dialog choose *Save as PDF* as the destination. Works
-  on phones too. This works whether or not they submit.
+  report layout: header, participating team members, score, the full priority
+  list, and all 25 answers. In the print dialog choose *Save as PDF* as the
+  destination. Works on phones too, and works whether or not they submit.
 
 **You review results.** Open `admin.html`, enter the PIN, and you get:
 
 - Four summary tiles — submissions, clubs reporting, average % of range, most
   common level
 - A sortable table (click any column header) with a filter box
-- Click any row for the full detail drawer — every answer, section rollup, and
-  a *Print* button for that single submission
+- Click any row for the full detail drawer — the priorities that Club was given,
+  every answer, section rollup, and a *Print* button for that single submission
 - **Export CSV — summary**: one row per submission, for a quick pivot
 - **Export CSV — every answer**: one row per answer, for question-level
   analysis across the portfolio ("which question does everyone fail?")
@@ -194,6 +196,32 @@ that one array.
 replace the `statements` array and the masthead text, and change
 `coreFundamental` in the submit payload from `'CF1 — Friends Inviting Friends'`
 to CF2. The admin dashboard picks it up with no changes.
+
+---
+
+## Editing the Club list and the priority ranking
+
+**Club list.** `index.html` has a `CLUBS` array near the top of the script
+block. Add, remove, or rename a Club there and the dropdown updates.
+
+**Priority ranking.** Each statement carries an `action` — the plain-language
+instruction a Club sees in "What to work on next". The order is computed as:
+
+```
+foundation = 4 - levelValue[yes]     a 101 item scores 3, a 401 item scores 0
+gain       = levelValue[yes] - levelValue[no]
+score      = foundation * 2 + gain
+```
+
+Foundation leads deliberately. CF#1 is a ladder, so the highest-leverage gap is
+the lowest unmet rung — it gates everything above it. Several statements score
+the same whether the answer is Yes or No, so they earn no points at all, yet
+they are prerequisites: ranking purely on points would tell a Club to run daily
+collateral walk-throughs before it has designed an invitation to walk past.
+
+To shift the emphasis toward raw score movement, swap the two multipliers on
+the `score` line. The on-screen list shows the top 6; the printed report shows
+every item answered No.
 
 ---
 
