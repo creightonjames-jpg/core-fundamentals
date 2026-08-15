@@ -692,10 +692,10 @@ document.getElementById('confirm-yes').addEventListener('click', function(){
 });
 
 const ACT = {
-  archive:   { patch:{archived:true},                 verb:'Archived'  },
-  unarchive: { patch:{archived:false},                verb:'Moved back to Active' },
-  delete:    { patch:{deleted:true, archived:false},  verb:'Deleted'   },
-  undelete:  { patch:{deleted:false},                 verb:'Restored'  }
+  archive:   { patch:{archived:true},                 verb:'Archived'   },
+  unarchive: { patch:{archived:false},                verb:'Unarchived' },
+  delete:    { patch:{deleted:true, archived:false},  verb:'Deleted'    },
+  undelete:  { patch:{deleted:false},                 verb:'Restored'   }
 };
 
 function rowAction(act, ids){
