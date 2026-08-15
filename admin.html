@@ -146,6 +146,63 @@
   table.d-table td.l{ width:46px; text-align:center; color:var(--forest); font-weight:600; }
   tr.sec-row td{ background:#f0ebda; font-weight:700; font-size:12.5px; color:var(--forest); }
 
+  /* ---------- filing: views, selection, row actions ---------- */
+  .viewtabs{ display:flex; gap:0; margin:0 0 14px; }
+  .viewtabs button{
+    font-family:inherit; font-size:12px; letter-spacing:0.09em; text-transform:uppercase;
+    background:transparent; color:#a9a494; border:1px solid rgba(216,185,104,0.35);
+    padding:8px 16px; cursor:pointer; margin-left:-1px;
+  }
+  .viewtabs button:first-child{ margin-left:0; border-radius:2px 0 0 2px; }
+  .viewtabs button:last-child{ border-radius:0 2px 2px 0; }
+  .viewtabs button:hover{ color:var(--brass-light); }
+  .viewtabs button.on{ background:var(--brass); color:var(--forest-deep); border-color:var(--brass); font-weight:700; }
+  .viewtabs button .n{ opacity:0.75; margin-left:6px; font-size:11px; }
+
+  .bulkbar{
+    display:none; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--brass); color:var(--forest-deep);
+    padding:10px 14px; border-radius:2px 2px 0 0; font-size:13.5px; font-weight:600;
+  }
+  .bulkbar.show{ display:flex; }
+  .bulkbar .grow{ margin-right:auto; }
+  .bulkbar .btn{ border-color:var(--forest-deep); color:var(--forest-deep); background:transparent; }
+  .bulkbar .btn:hover{ background:rgba(18,32,25,0.12); }
+
+  table.grid td.sel, table.grid th.sel{ width:34px; padding-right:0; cursor:default; }
+  table.grid td.sel input, table.grid th.sel input{ cursor:pointer; width:15px; height:15px; accent-color:#1f3a2e; }
+  table.grid th.act{ cursor:default; text-align:right; }
+  table.grid td.act{ text-align:right; white-space:nowrap; }
+  .rowbtn{
+    font-family:inherit; font-size:11px; letter-spacing:0.06em; text-transform:uppercase;
+    background:transparent; border:1px solid #b9b09a; color:#5f5a49;
+    padding:4px 9px; border-radius:2px; cursor:pointer; margin-left:5px;
+  }
+  .rowbtn:hover{ background:#ece6d4; color:var(--forest); border-color:var(--forest); }
+  .rowbtn.warn:hover{ background:#f6e3de; color:#8d3527; border-color:#a8412f; }
+  tr.is-archived td{ background:#f6f2e6; color:#6a6552; }
+  tr.is-deleted td{ background:#f7efec; color:#7a6a63; }
+  .statuschip{
+    display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px;
+    letter-spacing:0.08em; text-transform:uppercase; border:1px solid #a8412f; color:#8d3527;
+  }
+  .statuschip.arch{ border-color:var(--brass); color:#7d6320; }
+  .flash{
+    color:var(--brass-light); font-size:13px; min-height:18px; margin:0 0 10px; line-height:1.5;
+  }
+  .flash.err{ color:#e08a7c; }
+
+  /* in-page confirm — deliberately not window.confirm(), which blocks the page */
+  .confirm-wrap{ display:none; position:fixed; inset:0; background:rgba(8,14,10,0.72); z-index:60; }
+  .confirm-wrap.show{ display:flex; align-items:center; justify-content:center; padding:20px; }
+  .confirm-box{
+    background:var(--paper); border:1px solid var(--line); border-top:3px solid var(--brass);
+    border-radius:3px; max-width:440px; padding:26px 26px 22px;
+  }
+  .confirm-box h3{ margin:0 0 8px; font-size:18px; font-weight:500; color:var(--forest); }
+  .confirm-box p{ margin:0 0 18px; font-size:13.5px; line-height:1.6; color:#5a5544; }
+  .confirm-box .row{ display:flex; gap:10px; justify-content:flex-end; }
+
   @media (max-width:820px){
     .stats{ grid-template-columns:repeat(2,1fr); }
     table.grid .hide-sm{ display:none; }
@@ -155,7 +212,7 @@
   @media print{
     @page{ margin:0.6in; }
     body{ background:#fff; }
-    .topnav, .head, .dash, .overlay, .gate-wrap{ display:none !important; }
+    .topnav, .head, .dash, .overlay, .gate-wrap, .confirm-wrap{ display:none !important; }
     .drawer{ position:static; transform:none; width:100%; height:auto; border:none; overflow:visible; background:#fff; }
     .drawer-head{ position:static; background:#fff; color:#000; padding:0 0 10px; border-bottom:2px solid #1f3a2e; }
     .drawer-head .x, .drawer-head .btn{ display:none !important; }
@@ -213,9 +270,26 @@
     <div class="stat"><div class="k">Most common level</div><div class="v" id="s-mode">—</div></div>
   </div>
 
+  <div class="viewtabs" id="viewtabs">
+    <button data-view="active" class="on">Active <span class="n" id="n-active"></span></button>
+    <button data-view="archived">Archived <span class="n" id="n-archived"></span></button>
+    <button data-view="deleted">Deleted <span class="n" id="n-deleted"></span></button>
+  </div>
+
+  <p class="flash" id="flash"></p>
+
+  <div class="bulkbar" id="bulkbar">
+    <span class="grow" id="bulk-count">0 selected</span>
+    <button class="btn btn-outline btn-sm" id="bulk-archive">Archive</button>
+    <button class="btn btn-outline btn-sm" id="bulk-restore">Restore</button>
+    <button class="btn btn-outline btn-sm" id="bulk-delete">Delete</button>
+    <button class="btn btn-outline btn-sm" id="bulk-clear">Clear selection</button>
+  </div>
+
   <table class="grid" id="grid">
     <thead>
       <tr>
+        <th class="sel"><input type="checkbox" id="sel-all" aria-label="Select all rows"></th>
         <th data-sort="submittedAt">Date <span class="arrow"></span></th>
         <th data-sort="club">Club <span class="arrow"></span></th>
         <th data-sort="cfId">CF <span class="arrow"></span></th>
@@ -223,6 +297,7 @@
         <th data-sort="level">Level <span class="arrow"></span></th>
         <th data-sort="pctOfRange">% of range <span class="arrow"></span></th>
         <th data-sort="answered" class="hide-sm">Answered <span class="arrow"></span></th>
+        <th class="act">Filing</th>
       </tr>
     </thead>
     <tbody id="grid-body"></tbody>
@@ -238,6 +313,17 @@
     <button class="x" id="d-close" aria-label="Close">×</button>
   </div>
   <div class="drawer-body" id="drawer-body"></div>
+</div>
+
+<div class="confirm-wrap" id="confirm-wrap">
+  <div class="confirm-box">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-text"></p>
+    <div class="row">
+      <button class="btn btn-outline btn-sm" id="confirm-no">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="confirm-yes">Confirm</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -275,6 +361,12 @@ const levels = ['101','201','301','401'];
 const levelNames = {'101':'Awareness','201':'Implementation','301':'Excellence','401':'Culture'};
 
 let db=null, auth=null, fs=null, rows=[], sortKey='submittedAt', sortDir=-1, booted=false;
+
+/* Which filing view is on screen, and which rows are ticked. Selection is
+   cleared whenever the view or a filter changes, so a bulk action can never
+   act on a row the user can no longer see. */
+let view = 'active';
+const selected = new Set();
 
 function esc(s){
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -348,6 +440,7 @@ async function loadSubmissions(){
       d.__date = d.submittedAt && d.submittedAt.toDate ? d.submittedAt.toDate() : null;
       rows.push(d);
     });
+    renderTabs();
     renderStats();
     renderGrid();
   }catch(err){
@@ -358,7 +451,10 @@ async function loadSubmissions(){
   }
 }
 
-function visibleRows(){
+/* Rows matching the fundamental filter and the search box, before the
+   Active / Archived / Deleted split is applied. The view tab counts are taken
+   from here so they reflect what you are filtered to. */
+function baseRows(){
   const term = document.getElementById('search').value.trim().toLowerCase();
   const cf = document.getElementById('cf-filter').value;
   let out = rows;
@@ -371,6 +467,19 @@ function visibleRows(){
              String(r.takerName||'').toLowerCase().indexOf(term) > -1;
     });
   }
+  return out;
+}
+
+/* Deleted wins over archived: a row that is both shows only under Deleted, so
+   nothing can hide in two places at once or vanish from all three. */
+function inView(r, v){
+  if(r.deleted === true) return v === 'deleted';
+  if(r.archived === true) return v === 'archived';
+  return v === 'active';
+}
+
+function visibleRows(){
+  const out = baseRows().filter(function(r){ return inView(r, view); });
   return out.slice().sort(function(a,b){
     let av, bv;
     if(sortKey === 'submittedAt'){
@@ -408,44 +517,231 @@ function renderStats(){
   }
 }
 
+function renderTabs(){
+  const base = baseRows();
+  ['active','archived','deleted'].forEach(function(v){
+    document.getElementById('n-' + v).textContent =
+      base.filter(function(r){ return inView(r, v); }).length;
+    const btn = document.querySelector('#viewtabs button[data-view="' + v + '"]');
+    btn.classList.toggle('on', v === view);
+  });
+}
+
 function renderGrid(){
   const body = document.getElementById('grid-body');
   const data = visibleRows();
   body.innerHTML = '';
-  document.getElementById('empty').style.display = data.length ? 'none' : '';
+
+  const empty = document.getElementById('empty');
+  empty.style.display = data.length ? 'none' : '';
+  empty.textContent = view === 'active'
+    ? 'No submissions yet.'
+    : view === 'archived' ? 'Nothing archived.' : 'Nothing deleted.';
   document.getElementById('grid').style.display = data.length ? '' : 'none';
 
   data.forEach(function(r){
     const tr = document.createElement('tr');
+    if(r.deleted === true) tr.className = 'is-deleted';
+    else if(r.archived === true) tr.className = 'is-archived';
+
     tr.innerHTML =
+      '<td class="sel"><input type="checkbox" aria-label="Select this submission"' +
+        (selected.has(r.__id) ? ' checked' : '') + '></td>' +
       '<td>' + (r.__date ? r.__date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—') + '</td>' +
       '<td>' + esc(r.club) + '</td>' +
       '<td><span class="lvl-pill" style="border-color:#a89e82;color:#7a7360;">CF#' + esc(r.cfId || 1) + '</span></td>' +
       '<td class="team">' + esc(r.takerName) + '</td>' +
       '<td><span class="lvl-pill lvl-' + esc(r.level) + '">' + esc(r.level) + ' ' + esc(levelNames[r.level]||'') + '</span></td>' +
       '<td>' + esc(r.pctOfRange) + '%</td>' +
-      '<td class="hide-sm">' + esc(r.answered) + ' / ' + esc(r.totalQuestions||25) + '</td>';
+      '<td class="hide-sm">' + esc(r.answered) + ' / ' + esc(r.totalQuestions||25) + '</td>' +
+      '<td class="act">' + rowActions(r) + '</td>';
+
+    // Clicking the row opens the detail drawer; the checkbox and the filing
+    // buttons must not, or every archive would fling the drawer open.
     tr.addEventListener('click', function(){ openDetail(r); });
+
+    const box = tr.querySelector('.sel input');
+    box.addEventListener('click', function(e){ e.stopPropagation(); });
+    box.addEventListener('change', function(){
+      if(box.checked) selected.add(r.__id); else selected.delete(r.__id);
+      renderBulk();
+    });
+
+    tr.querySelectorAll('.rowbtn').forEach(function(b){
+      b.addEventListener('click', function(e){
+        e.stopPropagation();
+        rowAction(b.dataset.act, [r.__id]);
+      });
+    });
+
     body.appendChild(tr);
   });
+
+  const all = document.getElementById('sel-all');
+  all.checked = data.length > 0 && data.every(function(r){ return selected.has(r.__id); });
 
   document.querySelectorAll('#grid th').forEach(function(th){
     const a = th.querySelector('.arrow');
     if(a) a.textContent = (th.dataset.sort === sortKey) ? (sortDir === 1 ? '▲' : '▼') : '';
   });
+  renderBulk();
 }
+
+function rowActions(r){
+  if(r.deleted === true){
+    return '<button class="rowbtn" data-act="undelete">Restore</button>';
+  }
+  if(r.archived === true){
+    return '<button class="rowbtn" data-act="unarchive">Unarchive</button>' +
+           '<button class="rowbtn warn" data-act="delete">Delete</button>';
+  }
+  return '<button class="rowbtn" data-act="archive">Archive</button>' +
+         '<button class="rowbtn warn" data-act="delete">Delete</button>';
+}
+
+/* --------------------------------------------------------------- selection */
+function renderBulk(){
+  const bar = document.getElementById('bulkbar');
+  const n = selected.size;
+  bar.classList.toggle('show', n > 0);
+  document.getElementById('bulk-count').textContent =
+    n + (n === 1 ? ' submission selected' : ' submissions selected');
+  // Only offer what makes sense for the view you are standing in.
+  document.getElementById('bulk-archive').style.display = view === 'active' ? '' : 'none';
+  document.getElementById('bulk-restore').style.display = view === 'active' ? 'none' : '';
+  document.getElementById('bulk-restore').textContent =
+    view === 'deleted' ? 'Restore' : 'Unarchive';
+  document.getElementById('bulk-delete').style.display = view === 'deleted' ? 'none' : '';
+}
+
+function clearSelection(){ selected.clear(); renderBulk(); renderGrid(); }
+
+document.getElementById('sel-all').addEventListener('change', function(e){
+  const data = visibleRows();
+  if(e.target.checked) data.forEach(function(r){ selected.add(r.__id); });
+  else data.forEach(function(r){ selected.delete(r.__id); });
+  renderGrid();
+});
+document.getElementById('bulk-clear').addEventListener('click', clearSelection);
+document.getElementById('bulk-archive').addEventListener('click', function(){
+  rowAction('archive', Array.from(selected));
+});
+document.getElementById('bulk-restore').addEventListener('click', function(){
+  rowAction(view === 'deleted' ? 'undelete' : 'unarchive', Array.from(selected));
+});
+document.getElementById('bulk-delete').addEventListener('click', function(){
+  rowAction('delete', Array.from(selected));
+});
+
+/* ------------------------------------------------------------------ views */
+document.querySelectorAll('#viewtabs button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    view = btn.dataset.view;
+    selected.clear();
+    flash('');
+    renderTabs(); renderStats(); renderGrid();
+  });
+});
 
 document.querySelectorAll('#grid th').forEach(function(th){
   th.addEventListener('click', function(){
     const k = th.dataset.sort;
+    if(!k) return;                       // the checkbox and Filing columns do not sort
     if(sortKey === k){ sortDir *= -1; } else { sortKey = k; sortDir = (k === 'submittedAt' ? -1 : 1); }
     renderGrid();
   });
 });
-document.getElementById('search').addEventListener('input', renderGrid);
-document.getElementById('cf-filter').addEventListener('change', function(){
-  renderStats(); renderGrid();
+document.getElementById('search').addEventListener('input', function(){
+  selected.clear(); renderTabs(); renderStats(); renderGrid();
 });
+document.getElementById('cf-filter').addEventListener('change', function(){
+  selected.clear(); renderTabs(); renderStats(); renderGrid();
+});
+
+/* ================================================================= filing ==
+   Archive and delete are both reversible flags on the submission document.
+   Nothing is ever removed from the database from this page — see the comment
+   block in firestore.rules for why, and what it would take to change that.
+   ========================================================================= */
+function flash(text, isErr){
+  const f = document.getElementById('flash');
+  f.textContent = text || '';
+  f.className = 'flash' + (isErr ? ' err' : '');
+}
+
+let pendingConfirm = null;
+function askConfirm(title, text, onYes){
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-text').textContent = text;
+  pendingConfirm = onYes;
+  document.getElementById('confirm-wrap').classList.add('show');
+  document.getElementById('confirm-yes').focus();
+}
+function closeConfirm(){
+  document.getElementById('confirm-wrap').classList.remove('show');
+  pendingConfirm = null;
+}
+document.getElementById('confirm-no').addEventListener('click', closeConfirm);
+document.getElementById('confirm-wrap').addEventListener('click', function(e){
+  if(e.target.id === 'confirm-wrap') closeConfirm();
+});
+document.getElementById('confirm-yes').addEventListener('click', function(){
+  const fn = pendingConfirm;
+  closeConfirm();
+  if(fn) fn();
+});
+
+const ACT = {
+  archive:   { patch:{archived:true},                 verb:'Archived'  },
+  unarchive: { patch:{archived:false},                verb:'Moved back to Active' },
+  delete:    { patch:{deleted:true, archived:false},  verb:'Deleted'   },
+  undelete:  { patch:{deleted:false},                 verb:'Restored'  }
+};
+
+function rowAction(act, ids){
+  if(!ids.length) return;
+  const spec = ACT[act];
+  if(!spec) return;
+  if(act === 'delete'){
+    askConfirm(
+      ids.length === 1 ? 'Delete this submission?' : 'Delete ' + ids.length + ' submissions?',
+      'It moves to the Deleted view and stops counting toward the Club’s progress. ' +
+      'Nothing is erased — you can restore it at any time.',
+      function(){ applyStatus(act, ids, spec); }
+    );
+    return;
+  }
+  applyStatus(act, ids, spec);
+}
+
+async function applyStatus(act, ids, spec){
+  if(!db){ flash('Not connected to the database.', true); return; }
+  flash('Working…');
+  let ok = 0; const failed = [];
+  for(const id of ids){
+    try{
+      const patch = Object.assign({}, spec.patch, { statusAt: fs.serverTimestamp() });
+      await fs.updateDoc(fs.doc(db, SUBMISSIONS_COLLECTION, id), patch);
+      // keep the in-memory copy in step so the table updates without a refetch
+      const row = rows.find(function(r){ return r.__id === id; });
+      if(row) Object.assign(row, spec.patch);
+      selected.delete(id);
+      ok++;
+    }catch(err){
+      console.error(err);
+      failed.push(err && err.code === 'permission-denied'
+        ? 'the database refused the change (rules may not be published yet)'
+        : (err && err.message ? err.message : String(err)));
+    }
+  }
+  renderTabs(); renderStats(); renderGrid();
+  if(failed.length){
+    flash(spec.verb + ' ' + ok + ' of ' + ids.length + '. ' +
+          (ids.length - ok) + ' failed — ' + failed[0], true);
+  }else{
+    flash(spec.verb + ' ' + ok + (ok === 1 ? ' submission.' : ' submissions.'));
+  }
+}
 
 /* ------------------------------------------------------------------ detail */
 function openDetail(r){
@@ -458,6 +754,10 @@ function openDetail(r){
     '<div><span>Participating team members</span><b>' + esc(r.takerName) + '</b></div>' +
     '<div><span>Submitted</span><b>' + (r.__date ? r.__date.toLocaleString('en-US') : '—') + '</b></div>' +
     '<div><span>Questions answered</span><b>' + esc(r.answered) + ' of ' + esc(r.totalQuestions||25) + '</b></div>' +
+    (r.deleted === true || r.archived === true
+      ? '<div><span>Filing</span><b><span class="statuschip' + (r.deleted === true ? '' : ' arch') + '">' +
+        (r.deleted === true ? 'Deleted' : 'Archived') + '</span></b></div>'
+      : '') +
     '</div>';
 
   h += '<div class="d-score"><div class="lv">Level ' + esc(r.level) + ' — ' + esc(r.levelName||levelNames[r.level]||'') + '</div>' +
@@ -519,10 +819,18 @@ function closeDetail(){
 }
 document.getElementById('d-close').addEventListener('click', closeDetail);
 document.getElementById('overlay').addEventListener('click', closeDetail);
-document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeDetail(); });
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Escape') return;
+  // The confirm sits on top of everything, so it takes Escape first.
+  if(document.getElementById('confirm-wrap').classList.contains('show')) closeConfirm();
+  else closeDetail();
+});
 document.getElementById('d-print').addEventListener('click', function(){ window.print(); });
 
 /* ------------------------------------------------------------------ CSV */
+function filingLabel(r){
+  return r.deleted === true ? 'Deleted' : (r.archived === true ? 'Archived' : 'Active');
+}
 function csvCell(v){
   const s = String(v == null ? '' : v);
   return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
@@ -544,7 +852,7 @@ document.getElementById('csv-summary').addEventListener('click', function(){
   const data = visibleRows();
   const head = ['Submitted','Club','CF','Core Fundamental','Participating team members','Level','Level name','% of range',
                 'Points earned','Range min','Range max','Answered','Total questions',
-                'Count 101','Count 201','Count 301','Count 401','Doc ID'];
+                'Count 101','Count 201','Count 301','Count 401','Filing','Doc ID'];
   const lines = [head.map(csvCell).join(',')];
   data.forEach(function(r){
     lines.push([
@@ -553,10 +861,11 @@ document.getElementById('csv-summary').addEventListener('click', function(){
       r.earnedPoints, r.minPoints, r.maxPoints, r.answered, r.totalQuestions||25,
       r.counts ? r.counts['101'] : '', r.counts ? r.counts['201'] : '',
       r.counts ? r.counts['301'] : '', r.counts ? r.counts['401'] : '',
-      r.__id
+      filingLabel(r), r.__id
     ].map(csvCell).join(','));
   });
-  download('cf1-submissions-summary-' + stamp() + '.csv', lines.join('\n'));
+  // The export follows the view you are in — Active exports only active rows.
+  download('core-fundamentals-summary-' + view + '-' + stamp() + '.csv', lines.join('\n'));
 });
 
 document.getElementById('csv-answers').addEventListener('click', function(){
@@ -572,7 +881,7 @@ document.getElementById('csv-answers').addEventListener('click', function(){
       ].map(csvCell).join(','));
     });
   });
-  download('cf1-every-answer-' + stamp() + '.csv', lines.join('\n'));
+  download('core-fundamentals-every-answer-' + view + '-' + stamp() + '.csv', lines.join('\n'));
 });
 </script>
 

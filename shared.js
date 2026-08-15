@@ -246,7 +246,33 @@ export async function submitAssessment(doc) {
   return ref.id;
 }
 
-/* All submissions and drafts for one club, for the hub's progress view. */
+/* ---------------------------------------------------------------------------
+   FILING STATUS — archive and soft delete.
+
+   A submission's content is permanent. What can change is where it is filed:
+
+     archived   the membership team has dealt with it. Hidden from the default
+                results view, but it still counts as a completed assessment on
+                the Club's own hub page — the Club did the work.
+     deleted    it should not have existed: a test run, a duplicate, a false
+                start. Hidden from the results view AND from the Club's
+                progress, so their hub correctly shows it as not yet done.
+
+   Neither erases anything. Both are reversible, and the security rules permit
+   these fields to change and nothing else.
+--------------------------------------------------------------------------- */
+export async function setSubmissionStatus(id, patch) {
+  const fb = await firebase();
+  if (!fb) throw new Error('Firebase is not connected');
+  const clean = { statusAt: fb.fs.serverTimestamp() };
+  if ('archived' in patch) clean.archived = !!patch.archived;
+  if ('deleted' in patch) clean.deleted = !!patch.deleted;
+  await fb.fs.updateDoc(fb.fs.doc(fb.db, SUBMISSIONS_COLLECTION, id), clean);
+}
+
+/* All submissions and drafts for one club, for the hub's progress view.
+   Soft-deleted submissions are left out: a club whose only submission was a
+   test row should still see that fundamental as not started. */
 export async function clubProgress(club) {
   const fb = await firebase();
   if (!fb) return { submissions: [], drafts: [] };
@@ -259,6 +285,7 @@ export async function clubProgress(club) {
   const submissions = [], drafts = [];
   subSnap.forEach(function (d) {
     const v = d.data(); v.__id = d.id;
+    if (v.deleted === true) return;          // soft-deleted: treat as never submitted
     v.__date = v.submittedAt && v.submittedAt.toDate ? v.submittedAt.toDate() : null;
     submissions.push(v);
   });

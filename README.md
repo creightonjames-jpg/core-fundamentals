@@ -137,6 +137,41 @@ Partial is fine — written actions and fallbacks can coexist in the same file.
 
 ---
 
+## Filing results — archive and delete
+
+The results dashboard has three views: **Active**, **Archived**, **Deleted**.
+Every row carries an Archive/Delete pair, and ticking rows gives you the same
+actions in bulk. Delete asks before it acts.
+
+Both are **flags on the record, not removals**. Nothing on this page erases
+anything, ever.
+
+| | Hidden from the results list | Still counts on the Club's hub | Reversible |
+|---|---|---|---|
+| **Archived** | yes | **yes** — the Club did the work | one click |
+| **Deleted** | yes | no — the fundamental reads as not started | one click |
+
+That difference is the whole reason there are two. *Archived* means "we have
+dealt with this"; the assessment still happened. *Deleted* means "this should
+never have existed" — a test run, a duplicate, a false start — so it stops
+counting toward that Club's progress.
+
+CSV exports follow the view you are standing in and carry a **Filing** column,
+so an Active export is exactly the live set.
+
+**Why there is no permanent delete.** With no real sign-in, a `delete`
+permission in the rules would be a delete permission for *anyone who finds the
+site*, not just the membership team. The two flags are exposed to those same
+strangers, but a flipped flag is one click to undo and an erased assessment is
+gone for good. If a record ever truly must be removed, do it in the Firebase
+console — or take the "Making results private again" path below first.
+
+The rules keep this narrow. An update is accepted only if the set of keys it
+changes falls inside `['archived', 'deleted', 'statusAt']`, so no request,
+however crafted, can rewrite an answer, a score, a club or a date.
+
+---
+
 ## Access and privacy — read once
 
 The results dashboard is gated by a **PIN checked in the browser** (`ACCESS_PIN`
@@ -150,8 +185,9 @@ at the top of `admin.html`). Two things follow:
 trade for convenience. Note it now covers ten fundamentals of candid
 self-assessment rather than one, which is worth revisiting.
 
-What holds regardless: submitted assessments can never be edited or erased
-through the web app, and malformed writes are rejected by the rules.
+What holds regardless: the *content* of a submitted assessment can never be
+edited or erased through the web app, malformed writes are rejected by the
+rules, and the only permitted change is the archived/deleted filing flag.
 
 ### Making results private again
 

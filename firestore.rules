@@ -16,8 +16,10 @@ rules_version = '2';
 //   4. replace the PIN gate in admin.html with a real sign-in
 // The isAdmin() function and /admins rules below are already in place.
 //
-// What holds regardless: submitted assessments can never be edited or erased
-// through the web app, and malformed writes are rejected.
+// What holds regardless: the CONTENT of a submitted assessment can never be
+// edited or erased through the web app, and malformed writes are rejected. The
+// dashboard can archive or soft-delete a submission — both are reversible flags
+// that hide a row without touching what it says.
 // =============================================================================
 
 service cloud.firestore {
@@ -64,9 +66,32 @@ service cloud.firestore {
                     && request.resource.data.submittedAt == request.time;
 
       // A submitted assessment is a record of what a Club said on a given day.
-      // Nobody edits or deletes one from the web, including the membership team —
-      // corrections happen in the Firebase console, so an edit is always deliberate.
-      allow update, delete: if false;
+      // Its CONTENT is permanent: no answer, score, club or date can ever be
+      // rewritten from the web. The one thing the dashboard may change is its
+      // filing status — archived, or soft-deleted — and nothing else.
+      //
+      // The diff() check below is the whole protection. It allows a write only
+      // if the set of keys that actually changed is a subset of these three.
+      // An attempt to touch 'answers', 'level', 'club' or anything else in the
+      // same write is rejected outright, so a tampered request cannot smuggle a
+      // content edit in alongside an archive.
+      //
+      // Note what this does and does not defend against. Because there is no
+      // real sign-in (see ACCESS MODEL above), anyone who finds the site can
+      // flip these two flags. That is survivable by design: both are reversible
+      // from the dashboard in one click and neither destroys anything.
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['archived', 'deleted', 'statusAt'])
+                    && (!('archived' in request.resource.data)
+                        || request.resource.data.archived is bool)
+                    && (!('deleted' in request.resource.data)
+                        || request.resource.data.deleted is bool)
+                    && request.resource.data.statusAt == request.time;
+
+      // Hard delete stays off. Turning it on without a real sign-in would let
+      // any visitor erase every Club's results, permanently.
+      allow delete: if false;
     }
 
     // -----------------------------------------------------------------------
