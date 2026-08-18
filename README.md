@@ -11,6 +11,7 @@ total. That is why saving matters.
 index.html          Hub — pick your Club, see progress across all ten
 assessment.html     The assessment engine — ?cf=1 … ?cf=10
 admin.html          Results dashboard (PIN)
+summary.html        Club Summary — all ten on one page, printable
 shared.js           Scoring, priorities, Firebase, draft save/resume
 firebase-config.js  Your Firebase keys — the one file with settings in it
 firestore.rules     Security rules, pasted into the Firebase console
@@ -124,6 +125,7 @@ cannot audit collateral that was never designed.
 
 To shift the emphasis, change the two multipliers in `buildPriorities()` in
 `shared.js`. The screen shows the top six; the printed report lists every No.
+The Club Summary pools the same ranking across all ten — see below.
 
 ### Action statements
 
@@ -169,6 +171,39 @@ console — or take the "Making results private again" path below first.
 The rules keep this narrow. An update is accepted only if the set of keys it
 changes falls inside `['archived', 'deleted', 'statusAt']`, so no request,
 however crafted, can rewrite an answer, a score, a club or a date.
+
+---
+
+## The Club Summary
+
+`summary.html?club=Toledo%20Country%20Club` puts a club's whole programme on
+one sheet. It prints to two pages and carries:
+
+- club, date range of the ten, and everyone who took part (unioned across all
+  ten submissions, each person once)
+- the ten as a single picture — CF, headline, level, % of range
+- strongest two and widest-gap two, named
+- **the pooled priority list** — every No from every fundamental they submitted,
+  re-ranked by the same leverage formula, top 10
+
+That last list is the point of the page. Ten separate reports leave a club with
+ten to-do lists and no idea what comes first; this answers "where do we start"
+once. Their per-fundamental reports still list every item.
+
+**There is deliberately no single overall score.** A club at 401 on Ambassador
+Committee and 101 on Enrollment averages to something in the 300s, which
+describes no club and hides the only thing worth acting on. The ten-row table
+carries the picture instead.
+
+**Where the links are.** The hub shows a "View your Club Summary" invitation
+only when a club has submitted all ten — an overall summary built on four of ten
+would mislead them. The membership team can open it at any stage from the link
+inside any submission on the Results page; the page then states "Based on 6 of
+10" and names what is still outstanding, with a warning that the missing ones
+may hold higher-leverage gaps than anything listed.
+
+Change `TOP_N` at the top of the script in `summary.html` to lengthen or shorten
+the pooled list.
 
 ---
 
