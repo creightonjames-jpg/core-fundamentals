@@ -772,21 +772,6 @@ function openDetail(r){
   });
   h += '</table>';
 
-  if(Array.isArray(r.priorities) && r.priorities.length){
-    h += '<div class="d-h4">What they were told to work on next</div><table class="d-table">' +
-         '<tr><th></th><th>Priority</th><th>Q</th><th>Effect</th></tr>';
-    r.priorities.forEach(function(p, i){
-      h += '<tr><td class="n">' + (i+1) + '</td><td>' + esc(p.action) +
-           '</td><td class="a">' + esc(p.index) + '</td><td class="l">' +
-           (p.gain === 0 ? 'Base' : esc(p.liftsTo)) + '</td></tr>';
-    });
-    h += '</table>';
-  }else if(Array.isArray(r.answers) && r.answers.length && !r.priorities){
-    h += '<div class="d-h4">What they were told to work on next</div>' +
-         '<p style="font-size:13px;color:#6a6552;margin:0 0 4px;">' +
-         'Submitted before the priorities list was added.</p>';
-  }
-
   if(Array.isArray(r.sections) && r.sections.length){
     h += '<div class="d-h4">Section breakdown</div><table class="d-table"><tr><th>Section</th><th>Answered</th><th>Level</th><th>% of range</th></tr>';
     r.sections.forEach(function(s){
@@ -807,6 +792,22 @@ function openDetail(r){
            '</td><td class="a">' + esc(a.choice) + '</td><td class="l">' + esc(a.level) + '</td></tr>';
     });
     h += '</table>';
+  }
+
+  // Ranked instruction list last, so the printed page reads evidence first and
+  // finishes on what the Club was actually told to do. Rank and priority only:
+  // the question number and the "effect" column were machinery, not guidance.
+  if(Array.isArray(r.priorities) && r.priorities.length){
+    h += '<div class="d-h4">What they were told to work on next</div><table class="d-table">' +
+         '<tr><th></th><th>Priority</th></tr>';
+    r.priorities.forEach(function(p, i){
+      h += '<tr><td class="n">' + (i+1) + '</td><td>' + esc(p.action) + '</td></tr>';
+    });
+    h += '</table>';
+  }else if(Array.isArray(r.answers) && r.answers.length && !r.priorities){
+    h += '<div class="d-h4">What they were told to work on next</div>' +
+         '<p style="font-size:13px;color:#6a6552;margin:0 0 4px;">' +
+         'Submitted before the priorities list was added.</p>';
   }
 
   document.getElementById('drawer-body').innerHTML = h;

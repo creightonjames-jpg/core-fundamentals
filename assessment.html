@@ -500,11 +500,10 @@ function renderPriorities(r){
     q.textContent = 'Question ' + p.index + ' · ' + p.section;
     text.appendChild(q);
 
-    const tag = document.createElement('div');
-    tag.className = 'pri-tag' + (p.gain === 0 ? ' foundation' : '');
-    tag.textContent = p.gain === 0 ? 'Foundation' : 'Lifts to ' + p.liftsTo;
-
-    row.appendChild(rank); row.appendChild(text); row.appendChild(tag);
+    // No "Lifts to 201" badge. It told a Club how the scoring machinery moves
+    // rather than what to go and do, so it was noise on the one list that is
+    // meant to be pure instruction.
+    row.appendChild(rank); row.appendChild(text);
     rows.appendChild(row);
   });
 
@@ -535,11 +534,10 @@ function buildPrintReport(r){
     s = '<tr><td>Nothing flagged — every question answered returned Yes. ' +
         'Hold the standard and re-run this assessment next quarter.</td></tr>';
   }else{
-    s = '<tr><th></th><th>Priority</th><th>Question</th><th>Effect</th></tr>';
+    s = '<tr><th></th><th>Priority</th><th>Question</th></tr>';
     pri.forEach(function(p, i){
       s += '<tr><td class="num">' + (i+1) + '</td><td>' + esc(p.action) +
-           '</td><td class="ans">' + p.index + '</td><td class="lvl">' +
-           (p.gain === 0 ? 'Base' : p.liftsTo) + '</td></tr>';
+           '</td><td class="ans">' + p.index + '</td></tr>';
     });
   }
   document.getElementById('pr-priorities').innerHTML = s;
