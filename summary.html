@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Club Summary — Core Fundamentals | Century Golf Partners</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%23122019'/><text x='32' y='43' font-family='Georgia,serif' font-size='26' letter-spacing='1' fill='%23b8922f' text-anchor='middle'>CG</text></svg>">
+<link rel="stylesheet" href="assets/site.css">
+<style>
+  /* ---------------------------------------------------------------------
+     The summary is a DOCUMENT, not a dashboard. One sheet of paper that a
+     GM can put in front of a Board, so it is styled light and prints as
+     what you see. Two pages at most for a club that finished all ten.
+     --------------------------------------------------------------------- */
+  :root{
+    --ink:#1b241d; --forest:#1f3a2e; --forest-deep:#122019;
+    --brass:#b8922f; --brass-light:#d8b968;
+    --ivory:#f4efe2; --paper:#fbf9f3; --line:#d9d0b8;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:#e8e3d5; color:var(--ink);
+    font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  }
+  .topnav{
+    display:flex; justify-content:center; gap:26px; padding:14px 20px;
+    background:#0c1610; border-bottom:1px solid rgba(216,185,104,0.25);
+  }
+  .topnav a{ color:#c9c4b3; text-decoration:none; font-size:12px; letter-spacing:0.18em; text-transform:uppercase; }
+  .topnav a:hover{ color:var(--brass-light); }
+  .topnav a.active{ color:var(--brass-light); border-bottom:1px solid var(--brass); padding-bottom:3px; }
+
+  .sheet{
+    max-width:840px; margin:26px auto 60px; background:var(--paper);
+    border:1px solid var(--line); padding:44px 52px 52px;
+  }
+  .doc-head{ border-bottom:2px solid var(--forest); padding-bottom:16px; margin-bottom:22px; }
+  .doc-head .eyebrow{
+    font-size:10.5px; letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--brass); font-weight:700; margin-bottom:9px;
+  }
+  .doc-head h1{ margin:0 0 4px; font-size:29px; font-weight:400; color:var(--forest); line-height:1.2; }
+  .doc-head .sub{ font-size:14.5px; color:#5a5544; line-height:1.55; }
+
+  .facts{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:0 0 24px; }
+  .fact span{
+    display:block; font-size:9.5px; letter-spacing:0.15em; text-transform:uppercase;
+    color:#8a8267; margin-bottom:4px;
+  }
+  .fact b{ font-size:14.5px; font-weight:600; color:var(--forest); line-height:1.4; }
+
+  .who{ margin:0 0 26px; }
+  .who span{
+    display:block; font-size:9.5px; letter-spacing:0.15em; text-transform:uppercase;
+    color:#8a8267; margin-bottom:5px;
+  }
+  .who .list{ font-size:14px; line-height:1.7; color:#3f3b2e; }
+
+  .coverage{
+    padding:11px 15px; margin:0 0 26px; font-size:13.5px; line-height:1.55;
+    background:rgba(184,146,47,0.13); border-left:3px solid var(--brass); color:#5a4a18;
+  }
+  .coverage.done{ background:rgba(31,58,46,0.08); border-left-color:var(--forest); color:#2c4436; }
+
+  h2.sec{
+    font-size:11px; letter-spacing:0.2em; text-transform:uppercase; color:var(--brass);
+    font-weight:700; border-bottom:1px solid var(--line); padding-bottom:6px;
+    margin:32px 0 14px;
+  }
+
+  /* ---- the ten ---- */
+  table.ten{ width:100%; border-collapse:collapse; font-size:14px; }
+  table.ten th{
+    text-align:left; font-size:9.5px; letter-spacing:0.13em; text-transform:uppercase;
+    color:#8a8267; font-weight:600; border-bottom:1px solid var(--line); padding:0 8px 6px;
+  }
+  table.ten td{ padding:9px 8px; border-bottom:1px solid #eae4d2; vertical-align:top; line-height:1.45; }
+  table.ten td.cf{ width:52px; color:var(--brass); font-weight:700; white-space:nowrap; }
+  table.ten td.lv{ width:132px; white-space:nowrap; }
+  table.ten td.pc{ width:74px; text-align:right; font-weight:600; color:var(--forest); }
+  table.ten tr.undone td{ color:#9a9280; }
+  table.ten tr.undone td.cf{ color:#b8ae95; }
+  .pill{
+    display:inline-block; padding:2px 9px; border-radius:10px; font-size:11.5px; font-weight:600;
+    border:1px solid var(--forest); color:var(--forest);
+  }
+  .pill-401{ background:var(--forest); color:#fff; }
+  .pill-301{ background:rgba(31,58,46,0.17); }
+  .pill-201{ background:rgba(184,146,47,0.18); border-color:var(--brass); color:#7d6320; }
+  .pill-101{ background:transparent; border-color:#a89e82; color:#7a7360; }
+  .pill-none{ border-color:#c9c0a6; color:#9a9280; background:transparent; font-weight:500; }
+
+  /* ---- strongest / weakest ---- */
+  .ends{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .end-box{ border:1px solid var(--line); padding:16px 18px; background:#fff; }
+  .end-box h3{
+    margin:0 0 10px; font-size:10px; letter-spacing:0.16em; text-transform:uppercase;
+    font-weight:700; color:var(--forest);
+  }
+  .end-box.weak h3{ color:#8d3527; }
+  .end-item{ font-size:13.5px; line-height:1.5; margin-bottom:12px; }
+  .end-item:last-child{ margin-bottom:0; }
+  .end-item b{ color:var(--forest); font-weight:600; }
+  .end-item .meta{ display:block; font-size:12px; color:#8a8267; margin-top:2px; }
+  .end-empty{ font-size:13px; color:#8a8267; line-height:1.55; }
+
+  /* ---- pooled priorities ---- */
+  .pri-lede{ font-size:13.5px; color:#5a5544; line-height:1.6; margin:0 0 14px; }
+  ol.pool{ margin:0; padding:0 0 0 4px; list-style:none; counter-reset:pool; }
+  ol.pool li{
+    counter-increment:pool; position:relative; padding:11px 0 11px 40px;
+    border-top:1px solid #eae4d2; font-size:14.5px; line-height:1.5;
+  }
+  ol.pool li:before{
+    content:counter(pool) "."; position:absolute; left:0; top:11px;
+    color:var(--brass); font-weight:700; font-size:13px;
+  }
+  ol.pool li .from{
+    display:block; margin-top:4px; font-size:11.5px; color:#8a8267;
+    font-family:Georgia,serif; letter-spacing:0.02em;
+  }
+  .none-flagged{
+    font-size:14px; line-height:1.6; color:#2c4436;
+    background:rgba(31,58,46,0.08); border-left:3px solid var(--forest); padding:13px 16px;
+  }
+
+  .foot{
+    margin-top:34px; padding-top:14px; border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; gap:14px;
+    font-size:11px; color:#8a8267; letter-spacing:0.04em;
+  }
+
+  .bar{ max-width:840px; margin:0 auto; padding:18px 24px 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .bar .grow{ margin-right:auto; }
+  .btn{
+    font-family:inherit; font-size:12.5px; letter-spacing:0.05em; text-transform:uppercase;
+    padding:10px 20px; border-radius:2px; cursor:pointer; border:1px solid var(--brass); font-weight:700;
+    text-decoration:none; display:inline-block;
+  }
+  .btn-primary{ background:var(--brass); color:var(--forest-deep); }
+  .btn-primary:hover{ background:var(--brass-light); }
+  .btn-outline{ background:transparent; color:#3a3527; border-color:#8f8a79; }
+  .btn-outline:hover{ background:rgba(31,58,46,0.08); }
+  .picker{
+    font-family:inherit; font-size:14px; padding:9px 12px; min-width:250px;
+    background:var(--paper); border:1px solid var(--line); border-radius:2px; color:var(--ink);
+  }
+  .state{ max-width:840px; margin:40px auto; padding:0 24px; font-size:15px; color:#3f3b2e; line-height:1.6; }
+
+  @media (max-width:760px){
+    .sheet{ padding:28px 22px 34px; margin:14px 10px 40px; }
+    .facts{ grid-template-columns:1fr 1fr; }
+    .ends{ grid-template-columns:1fr; }
+  }
+
+  @media print{
+    @page{ margin:0.55in; }
+    body{ background:#fff; }
+    .topnav, .bar{ display:none !important; }
+    .sheet{
+      max-width:none; margin:0; border:none; padding:0; background:#fff;
+    }
+    .end-box, .coverage, .none-flagged{
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    .pill-401, .pill-301, .pill-201{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.ten tr, ol.pool li, .end-box{ page-break-inside:avoid; }
+    /* Strongest and Widest gap are a pair — never let a page break land
+       between them, or page 2 opens on a gap with nothing to compare to. */
+    .ends{ page-break-inside:avoid; }
+    h2.sec{ page-break-after:avoid; }
+
+    /* Compaction for paper. Jim asked for an abridged highlight, and three
+       sheets is not abridged — this brings a full ten-of-ten onto two. */
+    .doc-head{ padding-bottom:11px; margin-bottom:16px; }
+    .doc-head h1{ font-size:24px; }
+    .doc-head .sub{ font-size:13px; }
+    .facts{ gap:10px; margin-bottom:13px; }
+    .fact b{ font-size:13px; }
+    .who{ margin-bottom:13px; }
+    .who .list{ font-size:12.5px; line-height:1.5; }
+    .coverage{ margin-bottom:13px; padding:8px 11px; font-size:11.5px; }
+    h2.sec{ margin:16px 0 8px; font-size:9.5px; }
+    table.ten{ font-size:11.5px; }
+    table.ten td{ line-height:1.34; }
+    table.ten td{ padding:4px 7px; }
+    .end-box{ padding:12px 14px; }
+    .end-item{ font-size:11.5px; margin-bottom:7px; line-height:1.4; }
+    .end-item .meta{ font-size:11px; }
+    .pri-lede{ font-size:12px; margin-bottom:9px; }
+    ol.pool li{ padding:5px 0 5px 32px; font-size:12px; }
+    ol.pool li:before{ top:6px; font-size:12px; }
+    ol.pool li .from{ font-size:10.5px; margin-top:2px; }
+    .pill{ font-size:10.5px; padding:1px 7px; }
+    .foot{ margin-top:16px; padding-top:8px; font-size:9.5px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a href="index.html">Core Fundamentals</a>
+  <a href="summary.html" class="active">Club Summary</a>
+  <a href="admin.html">Results</a>
+</nav>
+
+<div class="bar" id="bar" style="display:none;">
+  <select class="picker" id="club-picker" aria-label="Club"></select>
+  <span class="grow"></span>
+  <button class="btn btn-primary" id="print-btn">Print / Save PDF</button>
+</div>
+
+<div class="state" id="state">Loading…</div>
+
+<div class="sheet" id="sheet" style="display:none;">
+  <div class="doc-head">
+    <div class="eyebrow">Century Golf Partners · Membership Core Fundamentals</div>
+    <h1 id="h-club">Club</h1>
+    <div class="sub">Club Summary — all ten fundamentals at a glance</div>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><span>Fundamentals completed</span><b id="f-done">—</b></div>
+    <div class="fact"><span>Assessed</span><b id="f-dates">—</b></div>
+    <div class="fact"><span>Questions answered</span><b id="f-answered">—</b></div>
+  </div>
+
+  <div class="who">
+    <span>Participating team members</span>
+    <div class="list" id="f-people">—</div>
+  </div>
+
+  <div class="coverage" id="coverage"></div>
+
+  <h2 class="sec">The ten fundamentals</h2>
+  <table class="ten">
+    <thead>
+      <tr><th>CF</th><th>Fundamental</th><th>Level</th><th style="text-align:right;">% of range</th></tr>
+    </thead>
+    <tbody id="ten-body"></tbody>
+  </table>
+
+  <h2 class="sec">Where this Club is strongest, and where the gap is widest</h2>
+  <div class="ends">
+    <div class="end-box">
+      <h3>Strongest</h3>
+      <div id="strongest"></div>
+    </div>
+    <div class="end-box weak">
+      <h3>Widest gap</h3>
+      <div id="weakest"></div>
+    </div>
+  </div>
+
+  <h2 class="sec">What to work on next — across all ten</h2>
+  <p class="pri-lede" id="pri-lede"></p>
+  <ol class="pool" id="pool"></ol>
+
+  <div class="foot">
+    <span>Century Golf Partners · Membership Core Fundamentals</span>
+    <span id="foot-right"></span>
+  </div>
+</div>
+
+<script type="module">
+import { FUNDAMENTALS, CLUBS } from './data/manifest.js';
+import { clubProgress, summariseClub, poolPriorities, esc, prettyDate, LEVEL_NAMES }
+  from './shared.js';
+import { FIREBASE_ENABLED } from './firebase-config.js';
+
+/* How many pooled items make the cut. Abridged on purpose: a club that answered
+   No to eighty things cannot start eighty things. Their per-fundamental reports
+   still list every one. */
+const TOP_N = 10;
+
+const params = new URLSearchParams(location.search);
+
+/* ------------------------------------------------------------------ club box */
+const picker = document.getElementById('club-picker');
+(function(){
+  const o = document.createElement('option');
+  o.value = ''; o.textContent = 'Select a Club…';
+  picker.appendChild(o);
+  CLUBS.forEach(function(name){
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    picker.appendChild(opt);
+  });
+})();
+
+function setState(msg){
+  const s = document.getElementById('state');
+  s.style.display = ''; s.innerHTML = msg;
+  document.getElementById('sheet').style.display = 'none';
+}
+
+picker.addEventListener('change', function(){
+  const u = new URL(location.href);
+  if(picker.value) u.searchParams.set('club', picker.value);
+  else u.searchParams.delete('club');
+  history.replaceState(null, '', u);
+  render();
+});
+document.getElementById('print-btn').addEventListener('click', function(){ window.print(); });
+
+/* ------------------------------------------------------------------- render */
+async function render(){
+  const club = picker.value;
+  document.getElementById('bar').style.display = '';
+
+  if(!club){
+    setState('Choose a Club above to see its summary.');
+    return;
+  }
+  if(!FIREBASE_ENABLED){
+    setState('Firebase is not connected, so there are no submissions to summarise.');
+    return;
+  }
+
+  setState('Loading ' + esc(club) + '…');
+
+  let progress;
+  try{
+    progress = await clubProgress(club);
+  }catch(err){
+    setState('Could not load this Club’s results: ' + esc(err && err.message ? err.message : String(err)));
+    return;
+  }
+
+  const sum = summariseClub(progress.submissions, FUNDAMENTALS);
+
+  if(sum.completed === 0){
+    setState('<b>' + esc(club) + '</b> has not submitted any of the ten fundamentals yet, ' +
+             'so there is nothing to summarise. Once they submit their first one this page fills in.');
+    return;
+  }
+
+  document.getElementById('state').style.display = 'none';
+  document.getElementById('sheet').style.display = '';
+
+  /* ---- lead ---- */
+  document.getElementById('h-club').textContent = club;
+  document.getElementById('f-done').textContent = sum.completed + ' of ' + sum.total;
+  document.getElementById('f-answered').textContent = sum.answered;
+
+  document.getElementById('f-dates').textContent =
+    (!sum.firstDate) ? '—'
+    : sameDay(sum.firstDate, sum.lastDate) ? prettyDate(sum.firstDate)
+    : prettyDate(sum.firstDate) + ' – ' + prettyDate(sum.lastDate);
+
+  document.getElementById('f-people').textContent =
+    sum.participants.length ? sum.participants.join('  ·  ') : '—';
+
+  const cov = document.getElementById('coverage');
+  if(sum.complete){
+    cov.className = 'coverage done';
+    cov.textContent = 'All ten fundamentals complete. This is the full picture of ' +
+      'this Club’s membership programme as they assess it themselves.';
+  }else{
+    const missing = sum.rows.filter(function(r){ return !r.done; }).map(function(r){ return 'CF#' + r.cfId; });
+    cov.className = 'coverage';
+    cov.textContent = 'Based on ' + sum.completed + ' of ' + sum.total +
+      ' fundamentals. Still outstanding: ' + missing.join(', ') +
+      ' — read the ranking below with that in mind, because the missing ' +
+      (missing.length === 1 ? 'one may hold' : 'ones may hold') +
+      ' higher-leverage gaps than anything listed here.';
+  }
+
+  /* ---- the ten ---- */
+  const tb = document.getElementById('ten-body');
+  tb.innerHTML = '';
+  sum.rows.forEach(function(r){
+    const tr = document.createElement('tr');
+    if(!r.done) tr.className = 'undone';
+    tr.innerHTML =
+      '<td class="cf">CF#' + r.cfId + '</td>' +
+      '<td>' + esc(r.headline) + '</td>' +
+      '<td class="lv">' + (r.done
+        ? '<span class="pill pill-' + esc(r.level) + '">' + esc(r.level) + ' ' +
+          esc(r.levelName || LEVEL_NAMES[r.level] || '') + '</span>'
+        : '<span class="pill pill-none">Not yet completed</span>') + '</td>' +
+      '<td class="pc">' + (r.done ? r.pctOfRange + '%' : '—') + '</td>';
+    tb.appendChild(tr);
+  });
+
+  /* ---- strongest / widest gap ---- */
+  renderEnds('strongest', sum.strongest,
+    'Not enough completed fundamentals yet to name a strongest.');
+  renderEnds('weakest', sum.weakest,
+    sum.completed < 3
+      ? 'With only ' + sum.completed + ' completed, naming a weakest would just repeat the list above.'
+      : 'Nothing to separate out.');
+
+  /* ---- pooled priorities ---- */
+  const pooled = poolPriorities(sum.submissions, TOP_N);
+  const allPooled = poolPriorities(sum.submissions);
+  const lede = document.getElementById('pri-lede');
+  const ol = document.getElementById('pool');
+  ol.innerHTML = '';
+
+  if(!allPooled.length){
+    lede.textContent = '';
+    ol.innerHTML = '<li style="border-top:none;padding-left:0;"><div class="none-flagged">' +
+      'Nothing flagged. Across every fundamental they completed, this Club answered ' +
+      'Yes to everything. Hold the standard and re-run the assessments next quarter.' +
+      '</div></li>';
+    ol.style.counterReset = 'pool';
+  }else{
+    lede.textContent = 'Out of ' + allPooled.length + ' item' + (allPooled.length === 1 ? '' : 's') +
+      ' this Club answered No to, these are the ' + Math.min(TOP_N, allPooled.length) +
+      ' that move the most — ranked by the same leverage rule used inside each ' +
+      'fundamental, so the lowest unmet rung leads. Every remaining item is listed ' +
+      'in that fundamental’s own report.';
+    pooled.forEach(function(p){
+      const li = document.createElement('li');
+      const cfs = p.cfIds.slice().sort(function(a,b){ return a - b; })
+        .map(function(n){ return 'CF#' + n; }).join(' and ');
+      li.innerHTML = esc(p.action) +
+        '<span class="from">' + cfs + (p.section ? ' · ' + esc(p.section) : '') +
+        (p.cfIds.length > 1 ? ' · raised under both' : '') + '</span>';
+      ol.appendChild(li);
+    });
+  }
+
+  document.getElementById('foot-right').textContent = club + ' · ' + prettyDate();
+  document.title = club + ' — Club Summary | Core Fundamentals';
+}
+
+function renderEnds(id, rows, emptyMsg){
+  const box = document.getElementById(id);
+  if(!rows.length){
+    box.innerHTML = '<div class="end-empty">' + esc(emptyMsg) + '</div>';
+    return;
+  }
+  box.innerHTML = rows.map(function(r){
+    return '<div class="end-item"><b>CF#' + r.cfId + ' — ' + esc(r.headline) + '</b>' +
+           '<span class="meta">' + esc(r.level) + ' ' +
+           esc(r.levelName || LEVEL_NAMES[r.level] || '') + ' · ' + r.pctOfRange +
+           '% of range</span></div>';
+  }).join('');
+}
+
+function sameDay(a, b){
+  return a && b && a.toDateString() === b.toDateString();
+}
+
+/* Preselect from the URL, or from the club this browser last used on the hub. */
+(function(){
+  const fromUrl = params.get('club');
+  let chosen = '';
+  if(fromUrl && CLUBS.indexOf(fromUrl) > -1) chosen = fromUrl;
+  else {
+    try{
+      const saved = window.localStorage.getItem('cgp-cf-club');
+      if(saved && CLUBS.indexOf(saved) > -1) chosen = saved;
+    }catch(e){ /* storage may be blocked */ }
+  }
+  picker.value = chosen;
+  render();
+})();
+</script>
+
+</body>
+</html>

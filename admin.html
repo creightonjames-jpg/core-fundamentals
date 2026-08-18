@@ -227,6 +227,7 @@
 
 <nav class="topnav">
   <a href="index.html">Core Fundamentals</a>
+  <a href="summary.html">Club Summary</a>
   <a href="admin.html" class="active">Results</a>
 </nav>
 
@@ -759,6 +760,13 @@ function openDetail(r){
         (r.deleted === true ? 'Deleted' : 'Archived') + '</span></b></div>'
       : '') +
     '</div>';
+
+  // Straight from one submission to the whole Club. The membership team can open
+  // this at any stage; the page states how many of the ten it is based on.
+  h += '<p style="margin:-6px 0 20px;font-size:13.5px;line-height:1.5;">' +
+       '<a href="summary.html?club=' + encodeURIComponent(r.club || '') + '" ' +
+       'style="color:#7d6320;font-weight:600;">Open the full Club Summary for ' +
+       esc(r.club || 'this Club') + ' →</a></p>';
 
   h += '<div class="d-score"><div class="lv">Level ' + esc(r.level) + ' — ' + esc(r.levelName||levelNames[r.level]||'') + '</div>' +
        '<div class="dt">' + esc(r.pctOfRange) + '% of the range between the worst and best possible outcome · ' +

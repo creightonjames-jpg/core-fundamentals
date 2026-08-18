@@ -144,6 +144,164 @@ export function buildPriorities(statements, detail) {
     });
 }
 
+/* ---------------------------------------------------------------------------
+   POOLED PRIORITIES — the payload of the club summary.
+
+   A club that finishes all ten walks away with ten separate to-do lists and no
+   sense of what comes first across the whole programme. This pools every "No"
+   from every fundamental they submitted and re-ranks it with the SAME leverage
+   formula, so the answer to "where do we start" is one list, not ten.
+
+   Ranking: score descending, then the earlier fundamental, then the earlier
+   question — deterministic, and it keeps the intended A-G sequence inside a tie.
+
+   Identical action text is collapsed. Where the same instruction surfaced under
+   more than one fundamental that is worth knowing, so the surviving entry
+   records every CF it came from — an item the club met twice is more urgent,
+   not less.
+--------------------------------------------------------------------------- */
+export function poolPriorities(submissions, limit) {
+  const flat = [];
+
+  submissions.forEach(function (sub) {
+    const cfId = Number(sub.cfId || 1);
+    (sub.priorities || []).forEach(function (p) {
+      // Submissions made before `score` was stored can still be ranked: the
+      // formula is recoverable from liftsTo and gain, which were always saved.
+      let score = p.score;
+      if (typeof score !== 'number') {
+        const lift = LEVEL_VALUE[p.liftsTo];
+        score = (typeof lift === 'number' && typeof p.gain === 'number')
+          ? (4 - lift) * 2 + p.gain
+          : 0;
+      }
+      flat.push({
+        cfId: cfId,
+        index: Number(p.index || 0),
+        section: p.section || '',
+        action: p.action || p.statement || '',
+        score: score,
+        cfIds: [cfId]
+      });
+    });
+  });
+
+  flat.sort(function (x, y) {
+    if (y.score !== x.score) return y.score - x.score;
+    if (x.cfId !== y.cfId) return x.cfId - y.cfId;
+    return x.index - y.index;
+  });
+
+  const seen = new Map();
+  const out = [];
+  flat.forEach(function (item) {
+    if (!item.action) return;
+    const key = item.action.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (seen.has(key)) {
+      const kept = seen.get(key);
+      if (kept.cfIds.indexOf(item.cfId) < 0) kept.cfIds.push(item.cfId);
+      return;
+    }
+    seen.set(key, item);
+    out.push(item);
+  });
+
+  return (limit && limit > 0) ? out.slice(0, limit) : out;
+}
+
+/* Split a "Participating Team Members" field into individual people.
+
+   Newlines when the field has them, and NOTHING otherwise — deliberately not
+   commas. Real entries look like "Jim Creighton, Director of People
+   Development", one per line, so splitting on commas would turn every person
+   into two people, half of them job titles. When there are no newlines we
+   cannot tell "Jim, Director" from "Jim, Lisa", so the safe reading is one
+   entry: a slightly long line beats inventing colleagues.
+
+   Internal whitespace is collapsed so "Lisa  Henrichsen" and "Lisa Henrichsen"
+   are recognised as the same person. */
+export function participantsFrom(text) {
+  const t = String(text || '').trim();
+  if (!t) return [];
+  const parts = /\r?\n/.test(t) ? t.split(/\r?\n/) : [t];
+  return parts
+    .map(function (x) { return x.trim().replace(/\s+/g, ' '); })
+    .filter(Boolean);
+}
+
+/* ---------------------------------------------------------------------------
+   CLUB SUMMARY — one row per fundamental, newest submission wins.
+
+   Deliberately returns a row for all ten even when a club has only done six,
+   so the summary can show what is missing rather than silently omitting it.
+--------------------------------------------------------------------------- */
+export function summariseClub(submissions, fundamentals) {
+  const newest = new Map();
+  submissions.forEach(function (s) {
+    if (s.deleted === true) return;
+    const id = Number(s.cfId || 1);
+    const cur = newest.get(id);
+    const d = s.__date ? s.__date.getTime() : 0;
+    const cd = cur && cur.__date ? cur.__date.getTime() : -1;
+    if (!cur || d > cd) newest.set(id, s);
+  });
+
+  const rows = fundamentals.map(function (cf) {
+    const s = newest.get(cf.id) || null;
+    return {
+      cfId: cf.id,
+      headline: cf.headline,
+      questions: cf.count,
+      done: !!s,
+      level: s ? s.level : null,
+      levelName: s ? (s.levelName || LEVEL_NAMES[s.level] || '') : null,
+      pctOfRange: s ? Number(s.pctOfRange || 0) : null,
+      answered: s ? Number(s.answered || 0) : 0,
+      date: s ? (s.__date || null) : null,
+      submission: s
+    };
+  });
+
+  const done = rows.filter(function (r) { return r.done; });
+
+  // Strongest and weakest by % of range. Ties break to the higher level, then
+  // to the earlier fundamental, so the same club always reads the same way.
+  const ranked = done.slice().sort(function (a, b) {
+    if (b.pctOfRange !== a.pctOfRange) return b.pctOfRange - a.pctOfRange;
+    const lv = (LEVEL_VALUE[b.level] || 0) - (LEVEL_VALUE[a.level] || 0);
+    if (lv !== 0) return lv;
+    return a.cfId - b.cfId;
+  });
+
+  const dates = done.map(function (r) { return r.date; }).filter(Boolean)
+                    .sort(function (a, b) { return a - b; });
+
+  // Everyone who took part, across every fundamental, each person once.
+  const people = new Map();
+  done.forEach(function (r) {
+    participantsFrom(r.submission.takerName).forEach(function (name) {
+      const key = name.toLowerCase();
+      if (!people.has(key)) people.set(key, name);
+    });
+  });
+
+  return {
+    rows: rows,
+    completed: done.length,
+    total: fundamentals.length,
+    complete: done.length === fundamentals.length,
+    answered: done.reduce(function (n, r) { return n + r.answered; }, 0),
+    strongest: ranked.slice(0, 2),
+    weakest: ranked.slice(-2).reverse().filter(function (r) {
+      return ranked.slice(0, 2).indexOf(r) < 0;   // never name the same CF twice
+    }),
+    firstDate: dates.length ? dates[0] : null,
+    lastDate: dates.length ? dates[dates.length - 1] : null,
+    participants: Array.from(people.values()),
+    submissions: done.map(function (r) { return r.submission; })
+  };
+}
+
 /* --------------------------------------------------------------- helpers -- */
 export function esc(s) {
   return String(s == null ? '' : s)

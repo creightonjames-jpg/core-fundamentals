@@ -11,6 +11,7 @@
 
 <nav class="topnav">
   <a href="index.html" class="active">Core Fundamentals</a>
+  <a href="summary.html">Club Summary</a>
   <a href="admin.html">Results</a>
 </nav>
 
@@ -44,6 +45,19 @@
       <div class="hub-stat"><div class="k">In progress</div><div class="v" id="s-prog">—</div></div>
       <div class="hub-stat"><div class="k">Not started</div><div class="v" id="s-none">—</div></div>
       <div class="hub-stat"><div class="k">Questions answered</div><div class="v" id="s-qs">—</div></div>
+    </div>
+
+    <div id="all-done" style="display:none;">
+      <div style="background:rgba(184,146,47,0.16);border:1px solid var(--brass);
+                  border-left:4px solid var(--brass);padding:18px 22px;margin:0 0 8px;">
+        <div style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;
+                    color:var(--brass);font-weight:700;margin-bottom:7px;">All ten complete</div>
+        <p style="margin:0 0 14px;font-size:14.5px;line-height:1.6;color:var(--ivory);">
+          Your Club has finished every fundamental. The Club Summary puts all ten on one page —
+          where you stand, where the gap is widest, and the ten things that move the most.
+        </p>
+        <a class="btn btn-primary btn-sm" id="summary-link" href="summary.html">View your Club Summary</a>
+      </div>
     </div>
 
     <div class="section-label">The Ten Fundamentals</div>
@@ -167,6 +181,17 @@ async function render(){
       '<div class="cf-actions">' + actions + '</div>';
     grid.appendChild(card);
   });
+
+  // The summary invitation only appears once every fundamental is submitted —
+  // an "overall summary" built on four of ten would mislead the Club.
+  const allDone = document.getElementById('all-done');
+  if(done === FUNDAMENTALS.length){
+    allDone.style.display = '';
+    document.getElementById('summary-link').href =
+      'summary.html?club=' + encodeURIComponent(club);
+  }else{
+    allDone.style.display = 'none';
+  }
 
   document.getElementById('s-done').textContent = done;
   document.getElementById('s-prog').textContent = prog;
