@@ -336,10 +336,16 @@ export function relativeTime(date) {
   return days + (days === 1 ? ' day ago' : ' days ago');
 }
 
+/* The one true slug. Draft ids, Club sign-in addresses, the `clubSlug` field on
+   every document and the security rules all depend on this producing the same
+   string, so it lives here and everything else imports it. */
+export function slugify(name) {
+  return String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 /* Deterministic draft id, so resuming needs no query. */
 export function draftId(club, cfId) {
-  return String(club).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-    + '--cf' + cfId;
+  return slugify(club) + '--cf' + cfId;
 }
 
 /* --------------------------------------------------------------- firebase -- */
@@ -355,7 +361,10 @@ export async function firebase() {
   ]);
   const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
   const auth = authMod.getAuth(app);
-  if (!auth.currentUser) await authMod.signInAnonymously(auth);
+  // Deliberately no anonymous sign-in. Every page is behind a Club or team
+  // account now (see auth.js), and silently minting an anonymous session would
+  // leave a caller signed in as nobody — which the rules refuse anyway, so all
+  // it would produce is confusing failures instead of a sign-in prompt.
   _fb = { app: app, auth: auth, fs: fsMod, db: fsMod.getFirestore(app) };
   return _fb;
 }
@@ -378,6 +387,7 @@ export async function saveDraft(club, cfId, payload) {
     fb.fs.doc(fb.db, DRAFTS_COLLECTION, draftId(club, cfId)),
     Object.assign({
       club: club,
+      clubSlug: slugify(club),      // what the security rules match against
       cfId: cfId,
       updatedAt: fb.fs.serverTimestamp()
     }, payload),
@@ -391,6 +401,7 @@ export async function submitAssessment(doc) {
   const ref = await fb.fs.addDoc(
     fb.fs.collection(fb.db, SUBMISSIONS_COLLECTION),
     Object.assign({}, doc, {
+      clubSlug: slugify(doc.club),  // what the security rules match against
       submittedAt: fb.fs.serverTimestamp(),
       uid: fb.auth.currentUser ? fb.auth.currentUser.uid : null,
       userAgent: navigator.userAgent
@@ -434,11 +445,16 @@ export async function setSubmissionStatus(id, patch) {
 export async function clubProgress(club) {
   const fb = await firebase();
   if (!fb) return { submissions: [], drafts: [] };
+  // Queried on clubSlug, not club: the rules authorise a read by comparing
+  // clubSlug to the signed-in Club's address, and Firestore only allows a query
+  // whose filter guarantees every match is readable. Filtering on the display
+  // name would be rejected outright.
+  const slug = slugify(club);
   const [subSnap, draftSnap] = await Promise.all([
     fb.fs.getDocs(fb.fs.query(
-      fb.fs.collection(fb.db, SUBMISSIONS_COLLECTION), fb.fs.where('club', '==', club))),
+      fb.fs.collection(fb.db, SUBMISSIONS_COLLECTION), fb.fs.where('clubSlug', '==', slug))),
     fb.fs.getDocs(fb.fs.query(
-      fb.fs.collection(fb.db, DRAFTS_COLLECTION), fb.fs.where('club', '==', club)))
+      fb.fs.collection(fb.db, DRAFTS_COLLECTION), fb.fs.where('clubSlug', '==', slug)))
   ]);
   const submissions = [], drafts = [];
   subSnap.forEach(function (d) {

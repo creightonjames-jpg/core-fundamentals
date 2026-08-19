@@ -236,20 +236,6 @@
   <h1>Assessment Results</h1>
 </div>
 
-<!-- ---------------- PIN gate ---------------- -->
-<div class="gate-wrap" id="gate-wrap">
-  <div class="card">
-    <h2>Enter PIN</h2>
-    <p class="sub">Century Golf membership team access — all ten fundamentals.</p>
-    <form id="pin-form">
-      <input type="password" id="pin" inputmode="numeric" autocomplete="off"
-             maxlength="12" aria-label="PIN" autofocus>
-      <button type="submit" class="btn btn-primary btn-full" id="pin-btn">View Results</button>
-    </form>
-    <p class="msg" id="pin-msg"></p>
-  </div>
-</div>
-
 <!-- ---------------- dashboard ---------------- -->
 <div class="dash" id="dash">
   <div class="toolbar">
@@ -260,7 +246,7 @@
     <input type="search" class="search" id="search" placeholder="Filter by club or name…">
     <button class="btn btn-outline btn-sm" id="csv-summary">Export CSV — summary</button>
     <button class="btn btn-outline btn-sm" id="csv-answers">Export CSV — every answer</button>
-    <button class="btn btn-outline btn-sm" id="lock">Lock</button>
+    <button class="btn btn-outline btn-sm" id="lock">Sign out</button>
   </div>
 
   <div class="stats">
@@ -328,8 +314,10 @@
 </div>
 
 <script type="module">
-import { firebaseConfig, SUBMISSIONS_COLLECTION, FIREBASE_ENABLED } from './firebase-config.js';
+import { SUBMISSIONS_COLLECTION, FIREBASE_ENABLED } from './firebase-config.js';
 import { FUNDAMENTALS } from './data/manifest.js';
+import { firebase } from './shared.js';
+import { gate } from './auth.js';
 
 /* Populate the fundamental filter from the manifest, so adding an 11th
    fundamental needs no change here. */
@@ -345,18 +333,13 @@ import { FUNDAMENTALS } from './data/manifest.js';
 })();
 
 /* ===========================================================================
-   ACCESS PIN
+   ACCESS
    ---------------------------------------------------------------------------
-   IMPORTANT, so nobody is misled later: this PIN is a convenience gate, not
-   security. It is checked here in the browser, which means it is visible to
-   anyone who views the source of this page, and the Firestore rules allow any
-   visitor to read submissions. Treat the results as public information.
-
-   If these results ever need to be genuinely private, the fix is to put the
-   admin UID allow-list back in firestore.rules and use a real sign-in — see
-   the README section "Making results private again".
+   The browser-side PIN is gone. Getting in here now requires a Firebase account
+   that is listed at /admins/{uid}, and the security rules grant the read — so
+   the gate is the database's, not this page's. Editing this file, or calling the
+   API directly, gets a visitor nothing.
    =========================================================================== */
-const ACCESS_PIN = '2026';
 
 const levels = ['101','201','301','401'];
 const levelNames = {'101':'Awareness','201':'Implementation','301':'Excellence','401':'Culture'};
@@ -372,32 +355,22 @@ const selected = new Set();
 function esc(s){
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-function pinMsg(t, cls){
-  const m = document.getElementById('pin-msg');
-  m.textContent = t; m.className = 'msg' + (cls ? ' ' + cls : '');
-}
 
 /* ------------------------------------------------------------------ gate */
-document.getElementById('pin-form').addEventListener('submit', async function(e){
-  e.preventDefault();
-  const entered = document.getElementById('pin').value.trim();
-  if(entered !== ACCESS_PIN){
-    pinMsg('That PIN is not correct.', 'err');
-    document.getElementById('pin').value = '';
-    document.getElementById('pin').focus();
-    return;
-  }
-  pinMsg('');
-  document.getElementById('gate-wrap').style.display = 'none';
+(async function start(){
+  const sess = await gate('admin');
   document.getElementById('dash').classList.add('show');
+  document.getElementById('who').textContent = sess.email + '  ·  UID ' + sess.uid;
+  document.getElementById('who').style.userSelect = 'all';
   if(!booted){ booted = true; await boot(); }
-});
+})();
 
-document.getElementById('lock').addEventListener('click', function(){
-  document.getElementById('dash').classList.remove('show');
-  document.getElementById('gate-wrap').style.display = '';
-  document.getElementById('pin').value = '';
-  document.getElementById('pin').focus();
+/* "Lock" now means sign out — leaving the page showing while the token is still
+   valid would be the same theatre the PIN was. */
+document.getElementById('lock').addEventListener('click', async function(){
+  const { signOutNow } = await import('./auth.js');
+  await signOutNow();
+  location.reload();
 });
 
 /* ------------------------------------------------------------------ boot */
@@ -407,16 +380,11 @@ async function boot(){
     return;
   }
   try{
-    const [{ initializeApp }, authMod, fsMod] = await Promise.all([
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
-    ]);
-    const app = initializeApp(firebaseConfig);
-    auth = authMod.getAuth(app);
-    fs = fsMod;
-    db = fsMod.getFirestore(app);
-    await authMod.signInAnonymously(auth);
+    // Same app instance the rest of the site uses, so there is one session.
+    const fb = await firebase();
+    auth = fb.auth;
+    fs = fb.fs;
+    db = fb.db;
     await loadSubmissions();
   }catch(err){
     console.error(err);
@@ -447,7 +415,7 @@ async function loadSubmissions(){
   }catch(err){
     console.error(err);
     showError(err && err.code === 'permission-denied'
-      ? 'The database is refusing to return results. Check that the Firestore rules allow reads (see the README).'
+      ? 'The database refused the read. Your account is signed in but is not on the admin list — add a document at /admins/{your UID} in Firestore. Your UID is shown beside \u201cSigned in as\u201d above.'
       : 'Could not load submissions: ' + (err && err.message ? err.message : err));
   }
 }

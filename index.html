@@ -75,6 +75,7 @@
 import { FUNDAMENTALS, CLUBS } from './data/manifest.js';
 import { clubProgress, esc, relativeTime, LEVEL_NAMES } from './shared.js';
 import { FIREBASE_ENABLED } from './firebase-config.js';
+import { gate } from './auth.js';
 
 /* ---------------------------------------------------------------- club box */
 const sel = document.getElementById('club');
@@ -84,18 +85,34 @@ CLUBS.forEach(function(name){
   sel.appendChild(o);
 });
 
-/* Remember the club between visits so a returning team lands straight on
-   their progress. Purely a convenience — the data itself lives in Firestore. */
 const REMEMBER = 'cgp-cf-club';
-try {
-  const saved = window.localStorage.getItem(REMEMBER);
-  if (saved && CLUBS.indexOf(saved) > -1) sel.value = saved;
-} catch (e) { /* storage may be blocked; not important */ }
 
 sel.addEventListener('change', function(){
   try { window.localStorage.setItem(REMEMBER, sel.value); } catch (e) {}
   render();
 });
+
+/* A Club signs in as itself, so it never picks from a list of 26 — it sees its
+   own name and its own progress, full stop. The membership team keeps the list,
+   because they legitimately need to look at any Club. */
+(async function start(){
+  const sess = await gate('club');
+  if(sess.club && !sess.isAdmin){
+    sel.value = sess.club;
+    document.querySelector('.identity').style.display = 'none';
+    const tag = document.createElement('p');
+    tag.style.cssText = 'margin:14px 0 0;font-size:12px;letter-spacing:0.22em;' +
+      'text-transform:uppercase;color:#d8b968;';
+    tag.textContent = sess.club;
+    document.querySelector('.masthead').appendChild(tag);
+  }else{
+    try {
+      const saved = window.localStorage.getItem(REMEMBER);
+      if (saved && CLUBS.indexOf(saved) > -1) sel.value = saved;
+    } catch (e) { /* storage may be blocked; not important */ }
+  }
+  render();
+})();
 
 /* ------------------------------------------------------------------ render */
 async function render(){
@@ -214,7 +231,6 @@ async function render(){
   }
 }
 
-render();
 </script>
 
 </body>

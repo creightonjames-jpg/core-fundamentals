@@ -104,6 +104,8 @@
     <div class="field">
       <label for="club">Club <span class="req">*</span></label>
       <select id="club"><option value="">Select your Club…</option></select>
+      <div id="club-fixed" style="display:none;font-size:16px;color:#1f3a2e;font-weight:600;
+           padding:11px 0 0;line-height:1.4;"></div>
     </div>
     <div class="field">
       <label for="taker">Participating Team Members <span class="req">*</span></label>
@@ -196,6 +198,7 @@ import {
   loadDraft, saveDraft, submitAssessment
 } from './shared.js';
 import { FIREBASE_ENABLED } from './firebase-config.js';
+import { gate } from './auth.js';
 
 /* ------------------------------------------------------- which fundamental */
 const params = new URLSearchParams(location.search);
@@ -214,13 +217,30 @@ CLUBS.forEach(function(name){
   clubSel.appendChild(o);
 });
 const REMEMBER = 'cgp-cf-club';
-try {
-  const saved = window.localStorage.getItem(REMEMBER);
-  if(saved && CLUBS.indexOf(saved) > -1) clubSel.value = saved;
-} catch(e) {}
+
+/* Signing in AS a Club replaces choosing one from a list. That removes a real
+   hazard: the old dropdown let someone file Toledo's answers under Balcones and
+   never notice. The membership team, who are not a single Club, keep the list. */
+function applySession(sess){
+  if(sess && sess.club){
+    clubSel.style.display = 'none';
+    clubSel.value = sess.club;
+    const fixed = document.getElementById('club-fixed');
+    fixed.style.display = '';
+    fixed.textContent = sess.club;
+  }else{
+    try {
+      const saved = window.localStorage.getItem(REMEMBER);
+      if(saved && CLUBS.indexOf(saved) > -1) clubSel.value = saved;
+    } catch(e) {}
+  }
+}
 
 /* ------------------------------------------------------------------- boot */
 (async function boot(){
+  const sess = await gate('club');
+  applySession(sess);
+
   const mod = await import('./data/cf' + cfId + '.js');
   CF = mod.default;
   statements = CF.statements;

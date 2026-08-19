@@ -267,6 +267,7 @@ import { FUNDAMENTALS, CLUBS } from './data/manifest.js';
 import { clubProgress, summariseClub, poolPriorities, esc, prettyDate, LEVEL_NAMES }
   from './shared.js';
 import { FIREBASE_ENABLED } from './firebase-config.js';
+import { gate } from './auth.js';
 
 /* How many pooled items make the cut. Abridged on purpose: a club that answered
    No to eighty things cannot start eighty things. Their per-fundamental reports
@@ -444,8 +445,21 @@ function sameDay(a, b){
   return a && b && a.toDateString() === b.toDateString();
 }
 
-/* Preselect from the URL, or from the club this browser last used on the hub. */
-(function(){
+/* A Club gets its own summary and no picker. The ?club= in the address is
+   ignored for them, so editing the URL to another Club's name shows nothing —
+   and the database would refuse the read regardless. The membership team keeps
+   the picker and can be sent a direct link. */
+(async function start(){
+  const sess = await gate('club');
+
+  if(sess.club && !sess.isAdmin){
+    picker.value = sess.club;
+    picker.disabled = true;
+    picker.title = 'You are signed in as ' + sess.club;
+    await render();
+    return;
+  }
+
   const fromUrl = params.get('club');
   let chosen = '';
   if(fromUrl && CLUBS.indexOf(fromUrl) > -1) chosen = fromUrl;
@@ -456,7 +470,7 @@ function sameDay(a, b){
     }catch(e){ /* storage may be blocked */ }
   }
   picker.value = chosen;
-  render();
+  await render();
 })();
 </script>
 

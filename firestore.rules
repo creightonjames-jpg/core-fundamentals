@@ -4,22 +4,28 @@ rules_version = '2';
 // Century Golf Partners — Membership Core Fundamentals
 // Firestore security rules  ·  published in the Firebase console
 //
-// ACCESS MODEL
-// The results dashboard (admin.html) is gated by a PIN checked in the browser.
-// A browser-side PIN cannot gate a database, so reads below are open to any
-// visitor. Treat submissions and drafts as public information.
+// ACCESS MODEL — one Club cannot see another Club's work.
 //
-// To make results private again:
-//   1. change  allow read: if true;  to  allow read: if isAdmin();
-//   2. create a Firebase Auth account for each viewer
-//   3. add a document at /admins/{that user's UID}
-//   4. replace the PIN gate in admin.html with a real sign-in
-// The isAdmin() function and /admins rules below are already in place.
+// Every Club has a real Firebase Auth account whose password is its PIN:
 //
-// What holds regardless: the CONTENT of a submitted assessment can never be
-// edited or erased through the web app, and malformed writes are rejected. The
-// dashboard can archive or soft-delete a submission — both are reversible flags
-// that hide a row without touching what it says.
+//     toledo-country-club@clubs.centurygolf.com   /   six digits
+//
+// Firebase verifies that PIN on its own servers. The rules below then read the
+// email address out of the resulting token and compare it to the `clubSlug`
+// stored on each document. So access is decided by the database, not by the
+// page — a Club that pokes at the API directly, or edits the JavaScript, still
+// gets nothing but its own records.
+//
+// The membership team signs in with an ordinary email and password and is
+// recognised by a document at /admins/{uid}. Admins read everything.
+//
+// Nobody else reads anything. There is no open read left anywhere.
+//
+// BEFORE PUBLISHING THESE RULES, three things must be true, or Clubs mid-
+// assessment will be locked out of work they have already done:
+//   1. the 26 Club accounts exist in Authentication  ->  Users
+//   2. every existing submissions/ and drafts/ document carries `clubSlug`
+//   3. a document exists at /admins/{your own Auth UID}
 // =============================================================================
 
 service cloud.firestore {
@@ -30,19 +36,31 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    // True when the caller signed in as exactly this Club. Guarded carefully:
+    // an anonymous token has no email at all, and reaching for a missing key
+    // would fail open in a language with looser semantics than this one.
+    function isClub(slug) {
+      return request.auth != null
+          && slug is string
+          && slug.size() > 0
+          && 'email' in request.auth.token
+          && request.auth.token.email is string
+          && request.auth.token.email.lower() == slug + '@clubs.centurygolf.com';
+    }
+
     // -----------------------------------------------------------------------
-    // Submitted assessments — permanent, immutable
+    // Submitted assessments — a Club reads its own; the team reads all.
+    // Content is permanent either way.
     // -----------------------------------------------------------------------
     match /submissions/{docId} {
 
-      // Open by design — see ACCESS MODEL above.
-      allow read: if true;
+      allow read: if isAdmin() || isClub(resource.data.clubSlug);
 
-      // takerName holds the list of participating team members, so it is allowed
-      // to be long — a club may list a dozen people.
-      allow create: if request.auth != null
+      // A Club may only file under its own name. clubSlug is what every later
+      // read is authorised against, so it has to be nailed down on the way in.
+      allow create: if isClub(request.resource.data.clubSlug)
                     && request.resource.data.keys().hasAll([
-                         'club', 'takerName', 'cfId', 'level', 'pctOfRange',
+                         'club', 'clubSlug', 'takerName', 'cfId', 'level', 'pctOfRange',
                          'earnedPoints', 'answered', 'answers', 'submittedAt'
                        ])
                     && request.resource.data.club is string
@@ -65,22 +83,11 @@ service cloud.firestore {
                     && request.resource.data.answers.size() <= 300
                     && request.resource.data.submittedAt == request.time;
 
-      // A submitted assessment is a record of what a Club said on a given day.
-      // Its CONTENT is permanent: no answer, score, club or date can ever be
-      // rewritten from the web. The one thing the dashboard may change is its
-      // filing status — archived, or soft-deleted — and nothing else.
-      //
-      // The diff() check below is the whole protection. It allows a write only
-      // if the set of keys that actually changed is a subset of these three.
-      // An attempt to touch 'answers', 'level', 'club' or anything else in the
-      // same write is rejected outright, so a tampered request cannot smuggle a
-      // content edit in alongside an archive.
-      //
-      // Note what this does and does not defend against. Because there is no
-      // real sign-in (see ACCESS MODEL above), anyone who finds the site can
-      // flip these two flags. That is survivable by design: both are reversible
-      // from the dashboard in one click and neither destroys anything.
-      allow update: if request.auth != null
+      // Archiving and soft-deleting are the membership team's filing actions, so
+      // they now require an admin — a Club cannot hide its own bad result, and a
+      // passer-by cannot flip anyone's flags. Content is still untouchable: only
+      // these three keys may change, whoever is asking.
+      allow update: if isAdmin()
                     && request.resource.data.diff(resource.data).affectedKeys()
                          .hasOnly(['archived', 'deleted', 'statusAt'])
                     && (!('archived' in request.resource.data)
@@ -89,41 +96,57 @@ service cloud.firestore {
                         || request.resource.data.deleted is bool)
                     && request.resource.data.statusAt == request.time;
 
-      // Hard delete stays off. Turning it on without a real sign-in would let
-      // any visitor erase every Club's results, permanently.
+      // Real deletion happens in the Firebase console, deliberately.
       allow delete: if false;
     }
 
     // -----------------------------------------------------------------------
     // Drafts — work in progress, one document per Club per Fundamental.
-    // Overwritten continuously as a club works. Deliberately updatable: that is
-    // what makes "stop now, come back tomorrow" possible across 233 questions.
+    // Only the Club that owns it may read or write it. Updatable by design:
+    // that is what makes "stop now, come back tomorrow" possible across 233
+    // questions.
     // -----------------------------------------------------------------------
     match /drafts/{docId} {
-      allow read: if true;
 
-      allow create, update: if request.auth != null
-                    && request.resource.data.club is string
-                    && request.resource.data.club.size() > 0
-                    && request.resource.data.club.size() <= 120
-                    && request.resource.data.cfId is int
-                    && request.resource.data.cfId >= 1
-                    && request.resource.data.cfId <= 50
-                    && request.resource.data.updatedAt == request.time
-                    && (!('teamMembers' in request.resource.data)
-                        || request.resource.data.teamMembers.size() <= 1000)
-                    && (!('answered' in request.resource.data)
-                        || (request.resource.data.answered is int
-                            && request.resource.data.answered >= 0
-                            && request.resource.data.answered <= 300));
+      allow read: if isAdmin() || isClub(resource.data.clubSlug);
 
-      // Drafts are never removed. On submit they are flagged, not erased, so a
-      // Club can reopen an assessment and re-run it later.
+      // The id is derived from the Club and the fundamental, so it is pinned to
+      // the slug too. Otherwise one Club could create a document at another
+      // Club's id and quietly break their resume.
+      allow create: if isClub(request.resource.data.clubSlug)
+                    && docId.matches('^' + request.resource.data.clubSlug + '--cf[0-9]+$')
+                    && validDraft();
+
+      // Both sides checked: the document must already be this Club's, and must
+      // still be this Club's afterwards. A Club cannot hand its draft to
+      // another Club, or take one.
+      allow update: if isClub(resource.data.clubSlug)
+                    && isClub(request.resource.data.clubSlug)
+                    && validDraft();
+
       allow delete: if false;
     }
 
+    function validDraft() {
+      return request.resource.data.club is string
+          && request.resource.data.club.size() > 0
+          && request.resource.data.club.size() <= 120
+          && request.resource.data.cfId is int
+          && request.resource.data.cfId >= 1
+          && request.resource.data.cfId <= 50
+          && request.resource.data.updatedAt == request.time
+          && (!('teamMembers' in request.resource.data)
+              || request.resource.data.teamMembers.size() <= 1000)
+          && (!('answered' in request.resource.data)
+              || (request.resource.data.answered is int
+                  && request.resource.data.answered >= 0
+                  && request.resource.data.answered <= 300));
+    }
+
     // -----------------------------------------------------------------------
-    // Admin allow-list — reserved for the private-results path described above
+    // Admin allow-list. One document per member of the membership team, the
+    // document id being that person's Auth UID. Added by hand in the console —
+    // nothing in the app can grant itself admin.
     // -----------------------------------------------------------------------
     match /admins/{uid} {
       allow read: if isAdmin();

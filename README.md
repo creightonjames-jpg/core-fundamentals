@@ -8,10 +8,11 @@ Roughly 233 questions across the ten, about two and a half hours of answering in
 total. That is why saving matters.
 
 ```
-index.html          Hub — pick your Club, see progress across all ten
+index.html          Hub — your Club's progress across all ten
 assessment.html     The assessment engine — ?cf=1 … ?cf=10
-admin.html          Results dashboard (PIN)
+admin.html          Results dashboard (membership team sign-in)
 summary.html        Club Summary — all ten on one page, printable
+auth.js             Sign-in: per-Club PIN, verified by Firebase
 shared.js           Scoring, priorities, Firebase, draft save/resume
 firebase-config.js  Your Firebase keys — the one file with settings in it
 firestore.rules     Security rules, pasted into the Firebase console
@@ -65,9 +66,8 @@ one answer moves it further — so read it with that in mind.
 ## Saving and resuming
 
 Progress is stored in Firestore in a `drafts` collection, one document per Club
-per fundamental, at a predictable id (`toledo-country-club--cf7`). Anyone at
-that club resumes simply by choosing the club — there is no login, no code, and
-no dependence on the browser they started in.
+per fundamental, at a predictable id (`toledo-country-club--cf7`). Anyone at that
+club resumes by signing in with the Club PIN — from any computer, in any browser.
 
 Saves are **debounced**: one write a second and a half after the last answer,
 not one per tap. Across 26 clubs and ten fundamentals that stays comfortably
@@ -161,16 +161,17 @@ counting toward that Club's progress.
 CSV exports follow the view you are standing in and carry a **Filing** column,
 so an Active export is exactly the live set.
 
-**Why there is no permanent delete.** With no real sign-in, a `delete`
-permission in the rules would be a delete permission for *anyone who finds the
-site*, not just the membership team. The two flags are exposed to those same
-strangers, but a flipped flag is one click to undo and an erased assessment is
-gone for good. If a record ever truly must be removed, do it in the Firebase
-console — or take the "Making results private again" path below first.
+**Filing is the membership team's, not the Club's.** Both flags require an admin,
+so a Club cannot quietly archive away a result it does not like, and a passer-by
+cannot flip anyone's flags.
 
-The rules keep this narrow. An update is accepted only if the set of keys it
-changes falls inside `['archived', 'deleted', 'statusAt']`, so no request,
-however crafted, can rewrite an answer, a score, a club or a date.
+**Why there is still no permanent delete.** An erased assessment is gone; a
+flipped flag is one click to undo. If a record truly must be removed, do it in
+the Firebase console, where it is deliberate.
+
+The rules keep even an admin narrow. An update is accepted only if the set of
+keys it changes falls inside `['archived', 'deleted', 'statusAt']`, so no
+request, however crafted, can rewrite an answer, a score, a club or a date.
 
 ---
 
@@ -207,45 +208,77 @@ the pooled list.
 
 ---
 
-## Access and privacy — read once
+## Access — one Club cannot see another
 
-The results dashboard is gated by a **PIN checked in the browser** (`ACCESS_PIN`
-at the top of `admin.html`). Two things follow:
+Every Club has a **real Firebase Auth account whose password is its PIN**:
 
-1. Anyone who views the page source can read the PIN.
-2. The Firestore rules allow **any visitor to read submissions and drafts**, PIN
-   or no PIN, because a browser-side PIN cannot gate a database.
+```
+toledo-country-club@clubs.centurygolf.com    ·    six digits
+```
 
-**Treat submissions and drafts as public information.** This was a deliberate
-trade for convenience. Note it now covers ten fundamentals of candid
-self-assessment rather than one, which is worth revisiting.
+The Club only ever types six digits; the page builds the address from the Club
+they picked. Firebase verifies the PIN on its own servers, with its own
+brute-force protection, and returns a token. The security rules read the email
+out of that token and compare it to the `clubSlug` stored on each document.
 
-What holds regardless: the *content* of a submitted assessment can never be
-edited or erased through the web app, malformed writes are rejected by the
-rules, and the only permitted change is the archived/deleted filing flag.
+**The database decides, not the page.** Editing the JavaScript, or calling the
+Firestore API directly, gets a visitor nothing but their own Club's records.
+That is the difference from the PIN this replaced, which was checked in the
+browser and therefore not a lock at all.
 
-### Making results private again
+| | Their own drafts | Their own results | Anyone else's | The dashboard |
+|---|---|---|---|---|
+| A Club | read / write | read | **no** | no |
+| Membership team | read | read | read | yes |
+| Anyone else | no | no | no | no |
 
-1. In `firestore.rules`, change both `allow read: if true;` to
-   `allow read: if isAdmin();` and publish.
-2. Firebase → **Authentication → Users → Add user** for each viewer.
-3. Firestore → **Data** → collection `admins`, one document per viewer, the
-   **document ID being that person's Auth UID**.
-4. Replace the PIN gate in `admin.html` with a Firebase sign-in. Google sign-in
-   needs no passwords and would also make drafts private per person.
+There is no open read left anywhere, and no anonymous sign-in.
 
-`isAdmin()` and the `/admins` rules are already in place — nothing is rebuilt.
+Signing in **as** a Club also removed a quieter hazard: the old Club dropdown let
+someone file Toledo's answers under Balcones and never notice. A Club now sees
+its own name, fixed.
 
----
+### The addresses
+
+`clubs.centurygolf.com` is a subdomain with **no mailboxes**, on purpose. Nothing
+is ever emailed to those addresses — a forgotten PIN is reset in the Firebase
+console, which does not touch the Club's saved answers.
+
+Firebase requires a password of at least six characters, which is why the PINs
+are six digits rather than four.
+
+### Setting up the accounts
+
+`provision/` holds the roster and a script. Either:
+
+- **Script:** `node provision/create-accounts.mjs` with a service-account key —
+  creates all 26 Club accounts in one pass and is idempotent, so re-running it
+  only fills gaps.
+- **By hand:** Authentication → Users → Add user, 26 times, from the roster.
+
+Then, once: Authentication → Users → Add user for yourself with a real email,
+sign in at `admin.html`, and it will show you your UID. Create
+`admins/{that UID}` in Firestore. Nothing in the app can grant itself admin.
+
+### Changing a PIN
+
+Authentication → Users → the Club's row → Reset password. Saved answers and
+submitted results are untouched; the Club just needs the new digits.
+
+### Adding a Club
+
+Add it to `CLUBS` in `data/manifest.js`, then create the matching account. The
+slug must be the Club name lowercased with every run of non-alphanumerics turned
+into a single hyphen — `slugify()` in `shared.js` is the one definition, and the
+provisioning script uses the same rule.
 
 ## Firebase setup
 
 Already done for `cgp-core-fundamentals`. If it ever needs recreating:
 
 1. Firestore Database → Create → **production mode**, `nam5 (United States)`.
-2. Authentication → Sign-in method → enable **Anonymous** (used by every visitor
-   so the rules have something to check) and **Email/Password** (unused today,
-   kept for the private-results path).
+2. Authentication → Sign-in method → enable **Email/Password**. Anonymous is no
+   longer used and can be switched off.
 3. Project settings → Your apps → web app → copy the config into
    `firebase-config.js` and set `FIREBASE_ENABLED = true`.
 4. Firestore → Rules → paste `firestore.rules` → **Publish**. Do not skip this.
@@ -260,7 +293,8 @@ ten assessments across 26 clubs is a small fraction of one day's allowance.
 GitHub Pages, `main` branch, `/ (root)`. Keep the folder structure — `data/`
 and `assets/` matter.
 
-Send clubs the plain site link. Keep `admin.html` and the PIN to yourselves.
+Send clubs the plain site link and their own six digits. The dashboard is
+reachable by anyone but opens for nobody without an admin account.
 
 ---
 
@@ -292,9 +326,20 @@ check that Anonymous sign-in is still enabled.
 the exact club string. If a club was renamed in `manifest.js` after work began,
 old drafts sit under the old name.
 
-**"The database is refusing to return results."** The rules were changed. Both
-`submissions` and `drafts` need `allow read: if true;` for the PIN-gated
-dashboard and the hub's progress view to work.
+**A Club is told its PIN is wrong when it is not.** Check the account exists at
+Authentication → Users under exactly `<slug>@clubs.centurygolf.com`. A mismatch
+between the slug and the Club name in `manifest.js` produces this.
+
+**"The database refused the read" on the dashboard.** You are signed in but not
+on the admin list. The page shows your UID beside your email — create
+`admins/{that UID}` in Firestore.
+
+**A Club signs in but sees nothing it worked on.** Its documents are missing
+`clubSlug`, or carry the wrong one. Everything written by the current code sets
+it automatically; anything from before the change was backfilled once.
+
+**Too many wrong PINs.** Firebase pauses sign-in for that account for a few
+minutes. It clears itself.
 
 **Print output has dark green backgrounds.** Turn off "Background graphics" in
 the browser's print dialog.
