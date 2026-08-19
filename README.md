@@ -221,6 +221,11 @@ they picked. Firebase verifies the PIN on its own servers, with its own
 brute-force protection, and returns a token. The security rules read the email
 out of that token and compare it to the `clubSlug` stored on each document.
 
+The membership team has a PIN of its own, on a shared account
+(`admin@team.centurygolf.com`), which opens every Club. It is **ten digits, not
+six**, deliberately: a Club PIN unlocks one Club, this one unlocks all
+twenty-six plus the filing controls, so it is worth four more keystrokes.
+
 **The database decides, not the page.** Editing the JavaScript, or calling the
 Firestore API directly, gets a visitor nothing but their own Club's records.
 That is the difference from the PIN this replaced, which was checked in the
@@ -229,7 +234,7 @@ browser and therefore not a lock at all.
 | | Their own drafts | Their own results | Anyone else's | The dashboard |
 |---|---|---|---|---|
 | A Club | read / write | read | **no** | no |
-| Membership team | read | read | read | yes |
+| Team (Admin PIN, or a named account) | read | read | read | yes |
 | Anyone else | no | no | no | no |
 
 There is no open read left anywhere, and no anonymous sign-in.
@@ -256,14 +261,25 @@ are six digits rather than four.
   only fills gaps.
 - **By hand:** Authentication → Users → Add user, 26 times, from the roster.
 
-Then, once: Authentication → Users → Add user for yourself with a real email,
-sign in at `admin.html`, and it will show you your UID. Create
-`admins/{that UID}` in Firestore. Nothing in the app can grant itself admin.
+The roster includes the team account, so one run covers everything. Then go to
+`admin.html`, choose **Membership team**, and enter the Admin PIN — there is no
+UID to look up, because the rules recognise that address itself.
+
+**Named individual accounts** are the alternative when you want to know who
+looked at what: add the person in Authentication, have them sign in via "Use a
+named account instead" (which shows them their UID), then create
+`admins/{that UID}` in Firestore. Nothing in the app can grant itself admin
+either way.
 
 ### Changing a PIN
 
-Authentication → Users → the Club's row → Reset password. Saved answers and
-submitted results are untouched; the Club just needs the new digits.
+Authentication → Users → the row → Reset password. Saved answers and submitted
+results are untouched; they just need the new digits. The sign-in box accepts any
+length, so the Admin PIN can be a full passphrase if you would rather — nothing
+in the code assumes digits.
+
+If someone who knew the shared Admin PIN leaves, change it. That is the cost of
+a shared credential, and the reason named accounts exist.
 
 ### Adding a Club
 

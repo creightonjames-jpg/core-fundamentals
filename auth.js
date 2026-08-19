@@ -28,6 +28,12 @@ import { CLUBS } from './data/manifest.js';
 
 export const CLUB_EMAIL_DOMAIN = 'clubs.centurygolf.com';
 
+/* The shared membership-team account. The rules recognise this address itself,
+   so a team PIN works as soon as the account exists — no UID to look up. Named
+   individual accounts still work through /admins/{uid}; use those when you want
+   to know who looked at what. */
+export const TEAM_EMAIL = 'admin@team.centurygolf.com';
+
 export { slugify };
 
 export function clubEmail(club) {
@@ -54,11 +60,20 @@ export async function session(force) {
   if (!user) { _session = null; return null; }
 
   const email = String(user.email || '').toLowerCase();
-  let isAdmin = false;
-  try {
-    const snap = await fb.fs.getDoc(fb.fs.doc(fb.db, 'admins', user.uid));
-    isAdmin = snap.exists();
-  } catch (e) { isAdmin = false; }   // permission-denied === not an admin
+
+  // Two ways to be the team. The shared account is known by its address; a named
+  // account by a document at /admins/{uid}. Only ask the database when needed.
+  //
+  // This flag decides what the PAGE shows. It is not what protects anything —
+  // the rules make the same decision independently on every read and write, so a
+  // client that lied here would simply be refused.
+  let isAdmin = (email === TEAM_EMAIL);
+  if (!isAdmin) {
+    try {
+      const snap = await fb.fs.getDoc(fb.fs.doc(fb.db, 'admins', user.uid));
+      isAdmin = snap.exists();
+    } catch (e) { isAdmin = false; }   // permission-denied === not an admin
+  }
 
   let slug = null;
   if (email.endsWith('@' + CLUB_EMAIL_DOMAIN)) {
@@ -93,6 +108,12 @@ export async function signInClub(club, pin) {
   return session(true);
 }
 
+/* The team's own PIN, on the shared account. Same mechanism as a Club: Firebase
+   checks it, not this page. */
+export async function signInTeamPin(pin) {
+  return signInTeam(TEAM_EMAIL, pin);
+}
+
 export async function signInTeam(email, password) {
   const fb = await firebase();
   const authMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
@@ -115,9 +136,11 @@ export function friendlyAuthError(err) {
     case 'auth/invalid-credential':
     case 'auth/wrong-password':
     case 'auth/invalid-login-credentials':
-      return 'That PIN is not right for this Club. Check the digits and try again.';
+      return 'That PIN is not right. Check the digits and try again.';
     case 'auth/user-not-found':
-      return 'This Club has not been set up yet. Let the membership team know.';
+      return 'That account has not been set up yet. If you are a Club, let the ' +
+             'membership team know; if you are the team, create the account first ' +
+             '(see provision/SETUP.md).';
     case 'auth/too-many-requests':
       return 'Too many attempts. Firebase has paused sign-in for this Club for a ' +
              'few minutes — wait, then try again.';
@@ -155,7 +178,9 @@ const GATE_CSS = `
   color:#8a8267; margin-bottom:5px; font-weight:600; }
 .gate-f select, .gate-f input{ width:100%; font-family:inherit; font-size:15px; padding:11px 12px;
   background:#fff; border:1px solid #d9d0b8; border-radius:2px; color:#1b241d; box-sizing:border-box; }
-.gate-f input#gate-pin{ font-size:26px; letter-spacing:0.42em; text-align:center; padding-left:24px; }
+.gate-f input#gate-pin, .gate-f input#gate-teampin{
+  font-size:26px; letter-spacing:0.42em; text-align:center; padding-left:24px; }
+.gate-f input#gate-teampin{ font-size:21px; letter-spacing:0.26em; }
 .gate-f select:focus, .gate-f input:focus{ outline:2px solid #b8922f; outline-offset:1px; }
 .gate-go{ width:100%; font-family:inherit; font-size:13px; letter-spacing:0.06em;
   text-transform:uppercase; font-weight:700; padding:12px; margin-top:5px; cursor:pointer;
@@ -223,10 +248,10 @@ export async function gate(need) {
     // your own Auth UID, which is otherwise buried in the console. So show it.
     let note;
     if (need === 'admin' && !sess.clubSlug) {
-      note = 'Signed in as ' + sess.email + ', but this account is not on the admin ' +
-             'list yet. In Firestore, create a collection called admins with a ' +
-             'document whose ID is exactly:  ' + sess.uid +
-             '  — then reload this page.';
+      note = 'Signed in as ' + sess.email + ', which is neither the team account nor ' +
+             'on the admin list. Either use the shared Admin PIN, or add this account ' +
+             'by creating a document in Firestore at  admins/' + sess.uid +
+             '  — then reload.';
     } else {
       note = 'You are signed in as ' + (sess.club || sess.email) +
              ', which does not have access to this page.';
@@ -249,7 +274,7 @@ function renderGate(need, note) {
         '<div class="gate-eyebrow">Century Golf Partners</div>' +
         '<h2>Membership Core Fundamentals</h2>' +
         '<p class="gate-sub">' + (teamOnly
-          ? 'Results are for the membership team. Sign in to continue.'
+          ? 'Results are for the membership team. Enter the Admin PIN to continue.'
           : 'Sign in with your Club’s PIN. You will only ever see your own Club’s work.') +
         '</p>' +
         (teamOnly ? '' :
@@ -266,11 +291,21 @@ function renderGate(need, note) {
           '<button type="submit" class="gate-go" id="gate-club-go">Sign in</button>' +
         '</form>' +
         '<form id="gate-team-form" style="' + (teamOnly ? '' : 'display:none;') + '">' +
-          '<div class="gate-f"><label for="gate-email">Email</label>' +
+          '<div class="gate-f" id="gate-teampin-wrap">' +
+            '<label for="gate-teampin">Admin PIN</label>' +
+            '<input type="password" id="gate-teampin" inputmode="numeric" ' +
+            'autocomplete="off" maxlength="40" aria-label="Admin PIN">' +
+          '</div>' +
+          '<div class="gate-f" id="gate-email-wrap" style="display:none;">' +
+            '<label for="gate-email">Email</label>' +
             '<input type="email" id="gate-email" autocomplete="username"></div>' +
-          '<div class="gate-f"><label for="gate-pw">Password</label>' +
+          '<div class="gate-f" id="gate-pw-wrap" style="display:none;">' +
+            '<label for="gate-pw">Password</label>' +
             '<input type="password" id="gate-pw" autocomplete="current-password"></div>' +
           '<button type="submit" class="gate-go" id="gate-team-go">Sign in</button>' +
+          '<p style="margin:13px 0 0;text-align:center;">' +
+            '<a href="#" id="gate-named" style="font-size:12px;color:#7d6320;">' +
+            'Use a named account instead</a></p>' +
         '</form>' +
         '<p class="gate-msg" id="gate-msg">' + (note || '') + '</p>' +
         '<p class="gate-note">Lost your PIN? Ask the Century Golf membership team — ' +
@@ -347,15 +382,37 @@ function renderGate(need, note) {
       attempt(back.querySelector('#gate-club-go'), function () { return signInClub(club, pin); });
     });
 
-    back.querySelector('#gate-team-form').addEventListener('submit', function (e) {
+    // The shared Admin PIN is the front door. A named email account is the same
+    // privilege with a name attached — same form, one link away.
+    let namedMode = false;
+    back.querySelector('#gate-named').addEventListener('click', function (e) {
       e.preventDefault();
-      const email = back.querySelector('#gate-email').value.trim();
-      const pw = back.querySelector('#gate-pw').value;
-      if (!email || !pw) { say('Enter both an email and a password.'); return; }
-      attempt(back.querySelector('#gate-team-go'), function () { return signInTeam(email, pw); });
+      namedMode = !namedMode;
+      back.querySelector('#gate-teampin-wrap').style.display = namedMode ? 'none' : '';
+      back.querySelector('#gate-email-wrap').style.display = namedMode ? '' : 'none';
+      back.querySelector('#gate-pw-wrap').style.display = namedMode ? '' : 'none';
+      e.target.textContent = namedMode ? 'Use the shared Admin PIN instead'
+                                       : 'Use a named account instead';
+      say('');
+      back.querySelector(namedMode ? '#gate-email' : '#gate-teampin').focus();
     });
 
-    const first = teamOnly ? back.querySelector('#gate-email')
+    back.querySelector('#gate-team-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const go = back.querySelector('#gate-team-go');
+      if (namedMode) {
+        const email = back.querySelector('#gate-email').value.trim();
+        const pw = back.querySelector('#gate-pw').value;
+        if (!email || !pw) { say('Enter both an email and a password.'); return; }
+        attempt(go, function () { return signInTeam(email, pw); });
+        return;
+      }
+      const pin = back.querySelector('#gate-teampin').value.trim();
+      if (!pin) { say('Enter the Admin PIN.'); return; }
+      attempt(go, function () { return signInTeamPin(pin); });
+    });
+
+    const first = teamOnly ? back.querySelector('#gate-teampin')
                            : (sel.value ? back.querySelector('#gate-pin') : sel);
     if (first) first.focus();
   });

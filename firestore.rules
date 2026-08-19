@@ -16,24 +16,45 @@ rules_version = '2';
 // page — a Club that pokes at the API directly, or edits the JavaScript, still
 // gets nothing but its own records.
 //
-// The membership team signs in with an ordinary email and password and is
-// recognised by a document at /admins/{uid}. Admins read everything.
+// The membership team signs in with its own PIN, on the shared account
+// admin@team.centurygolf.com, and reads everything. Named individual accounts
+// can be added instead, or as well, via /admins/{uid}.
+//
+// Note the asymmetry on purpose: a Club PIN opens one Club, the team PIN opens
+// all twenty-six plus the filing controls, so the team PIN is longer.
 //
 // Nobody else reads anything. There is no open read left anywhere.
 //
 // BEFORE PUBLISHING THESE RULES, three things must be true, or Clubs mid-
 // assessment will be locked out of work they have already done:
 //   1. the 26 Club accounts exist in Authentication  ->  Users
-//   2. every existing submissions/ and drafts/ document carries `clubSlug`
-//   3. a document exists at /admins/{your own Auth UID}
+//   2. the team account admin@team.centurygolf.com exists
+//   3. every existing submissions/ and drafts/ document carries `clubSlug`
 // =============================================================================
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAdmin() {
+    // The membership team, two ways.
+    //
+    // The shared team account is recognised by its address, exactly as a Club
+    // is — so a team PIN works the moment the account exists, with no UID to
+    // look up and paste. Whoever knows that PIN is the team.
+    //
+    // /admins/{uid} remains for NAMED individual accounts, added by hand in the
+    // console. Use those when you want to know who looked at what; nothing in
+    // the app can add one.
+    function isTeamAccount() {
       return request.auth != null
-          && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+          && 'email' in request.auth.token
+          && request.auth.token.email is string
+          && request.auth.token.email.lower() == 'admin@team.centurygolf.com';
+    }
+
+    function isAdmin() {
+      return isTeamAccount()
+          || (request.auth != null
+              && exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
     }
 
     // True when the caller signed in as exactly this Club. Guarded carefully:
@@ -144,9 +165,10 @@ service cloud.firestore {
     }
 
     // -----------------------------------------------------------------------
-    // Admin allow-list. One document per member of the membership team, the
+    // Admin allow-list, for NAMED accounts. One document per person, the
     // document id being that person's Auth UID. Added by hand in the console —
-    // nothing in the app can grant itself admin.
+    // nothing in the app can grant itself admin. The shared team account does
+    // not need an entry here; it is recognised by its address above.
     // -----------------------------------------------------------------------
     match /admins/{uid} {
       allow read: if isAdmin();
